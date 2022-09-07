@@ -60,5 +60,5 @@ if submitted:
     sort_recommed = recommendation.sort_index(ascending=False)
     tab4.table(sort_recommed)
 
-    tab5.table(ticker.news)
+    tab5.write(ticker.info)
 
