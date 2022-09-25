@@ -1,7 +1,7 @@
+from unicodedata import name
 import numpy as np
 import requests
 import datetime
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
@@ -12,7 +12,8 @@ from datetime import datetime
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 from datetime import datetime
 from pandas.tseries.offsets import DateOffset
-from plotly.graph_objs import Scatter
+from plotly.graph_objs import Scatter, Bar
+import plotly.express as px
 
 
 
@@ -120,12 +121,14 @@ class Model():
                 Scatter(
                     x=self.training_set['Date'],
                     y=self.training_set['Close'],
-                    name='Reference period'
+                    name='Reference period',
+                    marker=dict(color='#5D4E7B')
                 ), 
                 Scatter(
                      x=self.df['Date'],
                     y=self.df['Forecast'],
-                    name='Forecast period'
+                    name='Forecast period',
+                    marker=dict(color ='#FD8A75')
                 )
             ]
         
@@ -146,7 +149,8 @@ class Model():
             Scatter(
                 x= earning['Year'],
                 y=earning['Earnings'],
-                name='Actual'
+                name='Actual',
+                marker=dict(color='#5D4E7B')
             )
         ]
 
@@ -167,12 +171,38 @@ class Model():
             Scatter(
                 x= earning['Year'],
                 y= earning['Revenue'],
-                name='Actual'
+                name='Actual',
+                marker=dict(color ='#FD8A75')
             )
         ]
 
         return graph_data
 
+    def plot_income_statement(self):
+        income_statement = pd.DataFrame(self.income_statement())
+        income_statement = income_statement.transpose()
+        income_statement = income_statement.reset_index()
+        income_statement.rename(columns={ income_statement.columns[0]: "Year" }, inplace = True)
+        income_statement['Year'] = pd.to_datetime(income_statement['Year'], '%Y')
+        graph_data = [
+            Bar(x= income_statement['Year'].dt.year ,y= income_statement['Total Revenue'],  name='Total Revenue', marker=dict(color='#5D4E7B')),
+            Bar(x= income_statement['Year'].dt.year ,y= income_statement['Net Income'], name='Net Income', marker=dict(color ='#FD8A75'))
+        ]
+        return graph_data
+
+    def plot_balance_sheet(self):
+        balance_sheet = pd.DataFrame(self.balance_sheet())
+        balance_sheet =  balance_sheet.transpose()
+        balance_sheet = balance_sheet.reset_index()
+        balance_sheet.rename(columns={ balance_sheet.columns[0]: "Year" }, inplace = True)
+        balance_sheet['Year'] = pd.to_datetime(balance_sheet['Year'], '%Y')
+        graph_data = [
+            Bar(x= balance_sheet['Year'].dt.year,y= balance_sheet['Total Assets'], name='Total Assets', marker=dict(color='#5D4E7B')),
+            Bar(x= balance_sheet['Year'].dt.year ,y= balance_sheet['Total Liab'], name='Total Liability', marker=dict(color ='#FD8A75')),
+        ]
+        return graph_data
+
+        
     def history_info(self,info):
         return round(self.dataset[info].iloc[-1], 2)
 
@@ -184,7 +214,6 @@ class Model():
 
     def balance_sheet(self):
         return self.ticket.balancesheet
-
 
     def cash_flow(self):
         return self.ticket.cashflow
@@ -198,3 +227,9 @@ class Model():
     def ticker(self, obj):
         return self.ticket.info[obj]
 
+stock_symbol = "AAPL"
+start_date = "2022-08-01"
+end_date =  "2022-09-03"
+prediction_date = "2022-09-27"
+m = Model()
+m.extract_data(stock_symbol, start_date, end_date)

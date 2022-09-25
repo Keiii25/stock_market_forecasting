@@ -1,4 +1,6 @@
-body,h1,h2,h3,h4,h5,h6 {font-family: "Raleway", sans-serif}
+@import '../assets/fonts/stylesheet.css';
+
+body,h1,h2,h3,h4,h5,h6 {font-family: "product_sansregular", sans-serif}
 
 body, html {
   height: 100%;
@@ -228,4 +230,4 @@ canvas {
   100% {
     transform: rotate(360deg);
   }
-
+}

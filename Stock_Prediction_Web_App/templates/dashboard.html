@@ -1,498 +1,708 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <meta name="description" content="" />
+    <meta name="author" content="" />
 
     <title>Dashboard</title>
 
-    <!-- Custom fonts for this template-->
-    <link rel="stylesheet"  type="text/css" href="{{ url_for('static', filename='vendor/fontawesome-free/css/all.min.css') }}" />
-    <link rel="stylesheet"  type="text/css" href="{{ url_for('static', filename='style.css') }}" />
+    <link
+      rel="font_stylesheet"
+      href="{{ url_for('static', filename='stylesheet.css') }}"
+      type="text/css"
+      charset="utf-8"
+    />
 
     <link
-        href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
-        rel="stylesheet">
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css?family=Lexend+Deca:200,300,400,600,700,800,900"
+    />
 
     <!-- Custom styles for this template-->
-    <link rel="stylesheet"  type="text/css" href="{{ url_for('static', filename='sb-admin-2.min.css') }}" />
-    <link rel="stylesheet"  type="text/css" href="{{ url_for('static', filename='vendor/mdi/css/materialdesignicons.min.css') }}" />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="{{ url_for('static', filename='sb-admin-2.min.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="{{ url_for('static', filename='vendor/mdi/css/materialdesignicons.min.css') }}"
+    />
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  </head>
 
-
-
-</head>
-
-<body id="page-top">
-
+  <body id="page-top">
     <!-- Page Wrapper -->
+    <!-- Topbar -->
+    <nav
+      class="navbar navbar-expand navbar-light bg-white topbar static-top shadow"
+    >
+      <!-- Topbar Search -->
+      <div class="d-none d-sm-inline-block mr-auto ml-md-3 my-2 my-md-0 mw-100">
+        <div class="sidebar-brand-text h4 font-weight-bold text-purple pt-2">
+          STOCK PRICE PREDICTION DASHBOARD
+        </div>
+      </div>
+    </nav>
+    <!-- End of Topbar -->
+
     <div id="wrapper">
+      <!-- Sidebar -->
+      <div class="bg-white border-right sidebar accordion pt-4 pl-4 pr-4">
+        <div class="h6 text-gray-900 mb-4 pl-2">
+          Choose a stock and select the date to forecast the stock price.
+        </div>
+        <form name = 'form' action="http://127.0.0.1:5000/" method="POST">
+          <div class="input-label text-uppercase text-gray-800 pl-2">
+            Stock Name/ 
+            Abbreviation
+          </div>
+          <input
+            type="text"
+            name="companyname"
+            class="form-control rounded-input input-font mb-4"
+            placeholder="Search for stock"
+            required
+          />
+          <div class="input-label text-uppercase text-gray-800 pl-2">
+            Start Date
+          </div>
+          <input
+            type="date"
+            name="ReferenceStartPeriod"
+            class="form-control rounded-input input-font mb-4"
+            placeholder="Start Date"
+            required
+          />
+          <div class="input-label text-uppercase text-gray-800 pl-2">
+            Forecast Date
+          </div>
+          <input
+            type="date"
+            name="PredictionDate"
+            class="form-control rounded-input input-font mb-4"
+            placeholder="Forecast Date"
+            required
+          />
+          <button
+            type="submit"
+            class="btn btn-lg btn-success text-uppercase"
+            value="Submit"
+          >
+            Build Model
+          </button>
+        </form>
+      </div>
+      <!-- End of Sidebar -->
 
-        <!-- Sidebar -->
-        <ul class="navbar-nav bg-gradient-light border-right sidebar  accordion" id="accordionSidebar">
-
-            <!-- Sidebar - Brand -->
-            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.html">
-                <div class="sidebar-brand-text" style="font-size:30px">MDS2</div>
-            </a>
-
-            <!-- Divider -->
-            <hr class="sidebar-divider my-0">
-
-            <!-- Nav Item - Dashboard -->
-            <li class="nav-item active">
-                <a class="nav-link" href="#page-top">
-                    <i class="fas fa-fw fa-tachometer-alt"></i>
-                    <span>Dashboard</span></a>
-            </li>
-
-            <!-- Divider -->
-            <hr class="sidebar-divider">
-
-            <!-- Nav Item - Charts -->
-            <li class="nav-item">
-                <a class="nav-link" href="charts.html">
-                    <i class="fas fa-fw fa-chart-area"></i>
-                    <span>Charts</span></a>
-            </li>
-
-            <!-- Nav Item - Tables -->
-            <li class="nav-item">
-                <a class="nav-link" href="tables.html">
-                    <i class="fas fa-fw fa-table"></i>
-                    <span>Tables</span></a>
-            </li>
-
-            <!-- Divider -->
-            <hr class="sidebar-divider d-none d-md-block">
-
-            <!-- Sidebar Toggler (Sidebar) -->
-            <div class="text-center d-none d-md-inline">
-                <button class="rounded-circle border-0" id="sidebarToggle"></button>
+      <!-- Content Wrapper -->
+      <div id="content-wrapper" class="d-flex flex-column pt-4 bg-content">
+        {% if predict %}
+        <!-- Main Content -->
+        <div id="content">
+          <!-- Begin Page Content -->
+          <div class="container-fluid">
+            <!-- Page Heading -->
+            <div class="d-sm-flex align-items-center">
+              <div class="h2 mb-0 font-weight-bold text-gray-900">
+                {{long_name}}
+              </div>
+            </div>
+            <div class="row col-xl-3 h6 mb-2 font-weight-normal text-gray-900">
+              {{stock_symbol}} &nbsp
+              <span class="font-weight-normal h6 text-black-50"
+                >{% if close_change < 0 %}
+                <p class="text-danger d-flex">
+                  {{close_change}} ({{close_percentage_change}}%)
+                </p>
+                {% else %}
+                <p class="text-success d-flex">
+                  +{{close_change}} ({{close_percentage_change}}%)
+                </p>
+                {% endif %}
+              </span>
             </div>
 
-        </ul>
-        <!-- End of Sidebar -->
-
-        <!-- Content Wrapper -->
-        <div id="content-wrapper" class="d-flex flex-column">
-
-            <!-- Main Content -->
-            <div id="content">
-
-                <!-- Topbar -->
-                <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
-
-                    <!-- Sidebar Toggle (Topbar) -->
-                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
-                        <i class="fa fa-bars"></i>
-                    </button>
-
-                    <!-- Topbar Search -->
-                    <form
-                        class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
-                        <div class="input-group">
-                            <input type="text" class="form-control bg-light border-0 small" placeholder="Search for..."
-                                aria-label="Search" aria-describedby="basic-addon2">
-                            <div class="input-group-append">
-                                <button class="btn btn-primary" type="button">
-                                    <i class="fas fa-search fa-sm"></i>
-                                </button>
-                            </div>
+            <!-- Content Row -->
+            <div class="row">
+              <!-- Open Price Card Example -->
+              <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-primary shadow h-75">
+                  <div class="card-body-stat">
+                    <div class="row no-gutters align-items-center">
+                      <div class="col mr-1">
+                        <div
+                          class="text-xs font-weight-bold text-primary text-uppercase mb-0"
+                        >
+                          Open
                         </div>
-                    </form>
-
-
-
-                </nav>
-                <!-- End of Topbar -->
-
-                <!-- Begin Page Content -->
-                <div class="container-fluid">
-
-
-                    <!-- Page Heading -->
-                    <div class="d-sm-flex align-items-center">
-                        <div class="h2 mb-0 font-weight-bold text-gray-800">{{long_name}}</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                          {{open_price}}
+                        </div>
+                        {% if open_change < 0 %}
+                        <p class="text-danger d-flex">
+                          <i class="mdi mdi-menu-down"></i
+                          ><span>{{open_change}}</span>
+                        </p>
+                        {% else %}
+                        <p class="text-success d-flex">
+                          <i class="mdi mdi-menu-up"></i
+                          ><span>+{{open_change}}</span>
+                        </p>
+                        {% endif %}
+                      </div>
+                      <div class="col-auto">
+                        <i class="fas fa-lock-open fa-2x text-gray-300"></i>
+                      </div>
                     </div>
-                    <div class="row col-xl-3 h5 mb-4 font-weight-bold text-gray-800">{{stock_symbol}}</div>
-
-                    <!-- Content Row -->
-                    <div class="row">
-
-                        <!-- Open Price Card Example -->
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-primary shadow h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                                        <div class="col mr-1">
-                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-0">
-                                               Open</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{open_price}}</div>
-                                            {% if open_change < 0  %}
-                                             <p class="text-danger d-flex"><i class="mdi mdi-menu-down"></i><span>{{open_change}}</span></p>
-                                            {% else %}
-                                            <p class="text-success d-flex"><i class="mdi mdi-menu-up"></i><span>+{{open_change}}</span></p>
-                                            {% endif %}
-
-                                        </div>
-                                        <div class="col-auto">
-                                            <i class="fas fa-lock-open fa-2x text-gray-300"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- High Price Card Example -->
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-success shadow h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-0">
-                                                High</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{high_price}}</div>
-                                            {% if high_change < 0  %}
-                                            <p class="text-danger d-flex"><i class="mdi mdi-menu-down"></i><span>{{high_change}}</span></p>
-                                            {% else %}
-                                            <p class="text-success d-flex"><i class="mdi mdi-menu-up"></i><span>+{{high_change}}</span></p>
-                                            {% endif %}
-                                        </div>
-
-                                        <div class="col-auto">
-                                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Low Price Card Example -->
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-info shadow h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-0">
-                                                Low</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{low_price}}</div>
-                                            {% if low_change < 0  %}
-                                            <p class="text-danger d-flex"><i class="mdi mdi-menu-down"></i><span>{{low_change}}</span></p>
-                                            {% else %}
-                                            <p class="text-success d-flex"><i class="mdi mdi-menu-up"></i><span>+{{low_change}}</span></p>
-                                            {% endif %}
-                                        </div>
-                                        <div class="col-auto">
-                                            <i class="fas fa-money-bill fa-2x text-gray-300"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Close Price Card Example -->
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-warning shadow h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-0">
-                                                Close</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{close_price}}</div>
-                                            {% if close_change < 0  %}
-                                            <p class="text-danger d-flex"><i class="mdi mdi-menu-down"></i><span>{{close_change}}</span></p>
-                                            {% else %}
-                                            <p class="text-success d-flex"><i class="mdi mdi-menu-up"></i><span>+{{close_change}}</span></p>
-                                            {% endif %}
-                                        </div>
-                                        <div class="col-auto">
-                                            <i class="fas fa-lock fa-2x text-gray-300"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Content Row -->
-
-                    <div class="row">
-
-                        <!-- Prediction Graph -->
-                        <div class="col-xl-8 col-lg-7">
-                            <div class="card shadow mb-4">
-                                <!-- Card Header - Dropdown -->
-                                <div
-                                    class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                                    <h6 class="m-0 font-weight-bold text-primary">Prediction Graph</h6>
-                                    <div class="dropdown no-arrow">
-                                        <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
-                                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
-                                        </a>
-                                        <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
-                                            aria-labelledby="dropdownMenuLink">
-                                            <div class="dropdown-header">Dropdown Header:</div>
-                                            <a class="dropdown-item" href="#">Action</a>
-                                            <a class="dropdown-item" href="#">Another action</a>
-                                            <div class="dropdown-divider"></div>
-                                            <a class="dropdown-item" href="#">Something else here</a>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- Card Body -->
-                                <div class="card-body">
-                                    <div id="chart" class="chart">
-
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Statistics Overview Card -->
-                        <div class="col-xl-4 col-lg-5">
-                            <div class="card shadow mb-4">
-                                <!-- Card Header - Dropdown -->
-                                <div
-                                    class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                                    <h6 class="m-0 font-weight-bold text-primary">Statistics Overview</h6>
-
-                                </div>
-                                <!-- Card Body -->
-                                <div class="card-body">
-                                    <div class="h6 mb-0 font-weight-bold text-gray-800">{{stock_symbol}}</div>
-                                    <div class="h2 mb-0 font-weight-bold text-gray-800">{{close_price}}
-                                        <span class="font-weight-bold text-gray-800" style="font-size:15px">{{currency}}
-                                        {% if close_change < 0  %}
-                                        <p class="text-danger d-flex">{{close_change}} ({{close_percentage_change}}%)</p>
-                                        {% else %}
-                                        <p class="text-success d-flex">+{{close_change}} ({{close_percentage_change}}%)</p>
-                                        {% endif %}
-                                        </span>
-
-                                    </div>
-                                    <div class = "row mb-2" style="font-size:12px">
-                                        <div class="col text-gray-900">{{low_price}}</div>
-                                        <div class="col text-center text-gray">DAY'S RANGE</div>
-                                        <div class="col text-right text-gray-900">{{high_price}}</div>
-                                    </div>
-                                    <div class="progress mb-4"style="height: 10px;">
-                                       <div class="progress-bar bg-success" role="progressbar" style="width: {{day_change_progress}}%"  aria-valuemin="0" aria-valuemax="100"></div>
-
-                                    </div>
-                                     <div class = "row mb-2" style="font-size:12px">
-                                        <div class="col text-gray-900">{{fiftyTwoWeeksLow}}</div>
-                                        <div class="col text-center text-gray">52 WEEK RANGE</div>
-                                        <div class="col text-right text-gray-900">{{fiftyTwoWeeksHigh}}</div>
-                                    </div>
-                                    <div class="progress mb-5"style="height: 10px;">
-                                       <div class="progress-bar bg-success" role="progressbar" style="width: {{fiftyTwo_change_progress}}%"  aria-valuemin="0" aria-valuemax="100"></div>
-
-                                    </div>
-                                      <div class="row mb-1" style="font-size:12px">
-                                          <div class="col-md-8 text-gray">PREVIOUS CLOSE</div>
-                                          <div class="col-md-4 ml-auto text-right text-gray-900">{{previous_close}}</div>
-                                      </div>
-                                      <div class="row mb-1" style="font-size:12px">
-                                          <div class="col-md-8 text-gray">OPEN</div>
-                                          <div class="col-md-4 ml-auto text-right text-gray-900">{{open_price}}</div>
-                                      </div>
-                                      <div class="row mb-1"style="font-size:12px">
-                                          <div class="col-md-8 text-gray">VOLUME</div>
-                                          <div class="col-md-4 ml-auto text-right text-gray-900">{{volume}}</div>
-                                      </div>
-                                      <div class="row mb-1"style="font-size:12px">
-                                          <div class="col-md-8 text-gray">AVERAGE VOLUME</div>
-                                          <div class="col-md-4 ml-auto text-right text-gray-900">{{average_vol}}</div>
-                                      </div>
-                                      <div class="row mb-1"style="font-size:12px">
-                                          <div class="col-md-8 text-gray">MARKET CAPITALIZATION</div>
-                                          <div class="col-md-4 ml-auto text-right text-gray-900">{{market_cap}}</div>
-                                      </div>
-                                      <div class="row mb-1"style="font-size:12px">
-                                          <div class="col-md-8 text-gray">DIVIDENDS YIELD (FY)</div>
-                                          <div class="col-md-4 ml-auto text-right text-gray-900">{{dividend_rate}}</div>
-                                      </div>
-                                      <div class="row mb-1"style="font-size:12px">
-                                          <div class="col-md-8 text-gray">PRICE TO EARNINGS RATIO (TTM)</div>
-                                          <div class="col-md-4 ml-auto text-right text-gray-900">{{pe}}</div>
-                                      </div>
-                                      <div class="row mb-1"style="font-size:12px">
-                                          <div class="col-md-8 text-gray">BASIC EPS (TTM)</div>
-                                          <div class="col-md-4 ml-auto text-right text-gray-900">{{eps}}</div>
-                                      </div>
-                                      <div class="row mb-1"style="font-size:12px">
-                                          <div class="col-md-8 text-gray">SHARES FLOAT</div>
-                                          <div class="col-md-4 ml-auto text-right text-gray-900">{{share_float}}</div>
-                                      </div>
-                                </div>
-
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Content Row -->
-                    <div class="row">
-
-                        <!-- Content Column -->
-                        <div class="col-lg-12 mb-4">
-
-                            <!-- Finance Card Example -->
-                            <div class="card shadow mb-1">
-                                <div class="card-header py-3">
-                                    <h6 class="m-0 font-weight-bold text-primary">Financials</h6>
-                                </div>
-                                <div class="card-body">
-                                    <!-- Tabs content -->
-                                    <div class="tab">
-                                      <button class="tablinks" onclick="openTab(event, 'Summary')">Summary</button>
-                                      <button class="tablinks" onclick="openTab(event, 'IncomeStatement')">Income Statement</button>
-                                      <button class="tablinks" onclick="openTab(event, 'BalanceSheet')">Balance Sheet</button>
-                                      <button class="tablinks" onclick="openTab(event, 'CashFlow')">Cash Flow</button>
-                                      <button class="tablinks" onclick="openTab(event, 'Profile')">Profile</button>
-                                    </div>
-                                    <div id="Summary" class="tabcontent ">
-                                      <h3>Summary</h3>
-                                        <div id="row">
-<!--                                            <div id="earning" class="col-md-4 " style="height:300px; width:300px"></div>-->
-                                            <div id="earning" class="col-md-4"></div>
-                                            <div id="revenue" class="col-md-4"></div>
-                                            </div>
-
-                                    </div>
-
-                                   <div id="Profile" class="tabcontent">
-                                      <h3>Profile</h3>
-                                      <p class="text-justify">{{business_profile}}</p>
-                                    </div>
-
-                                    <div id="IncomeStatement" class="tabcontent">
-                                      <h3>Income Statement</h3>
-                                      <p>{{income_statement|safe}}</p>
-                                    </div>
-
-                                    <div id="BalanceSheet" class="tabcontent">
-                                      <h3>Balance Sheet</h3>
-                                      <p>{{balance_sheet|safe}}</p>
-                                    </div>
-
-                                     <div id="CashFlow" class="tabcontent">
-                                      <h3>Cash Flow</h3>
-                                      <p>{{cash_flow}}</p>
-                                    </div>
-
-                                    <script>
-                                    function openTab(evt, tabName) {
-                                      var i, tabcontent, tablinks;
-                                      tabcontent = document.getElementsByClassName("tabcontent");
-                                      for (i = 0; i < tabcontent.length; i++) {
-                                        tabcontent[i].style.display = "none";
-                                      }
-                                      tablinks = document.getElementsByClassName("tablinks");
-                                      for (i = 0; i < tablinks.length; i++) {
-                                        tablinks[i].className = tablinks[i].className.replace(" active", "");
-                                      }
-                                      document.getElementById(tabName).style.display = "block";
-                                      evt.currentTarget.className += " active";
-                                    }
-                                    </script>
-
-                                </div>
-                            </div>
-                    </div>
-
-
+                  </div>
                 </div>
-                <!-- /.container-fluid -->
+              </div>
 
+              <!-- High Price Card Example -->
+              <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-success shadow h-75">
+                  <div class="card-body-stat">
+                    <div class="row no-gutters align-items-center">
+                      <div class="col mr-2">
+                        <div
+                          class="text-xs font-weight-bold text-success text-uppercase mb-0"
+                        >
+                          High
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                          {{high_price}}
+                        </div>
+                        {% if high_change < 0 %}
+                        <p class="text-danger d-flex">
+                          <i class="mdi mdi-menu-down"></i
+                          ><span>{{high_change}}</span>
+                        </p>
+                        {% else %}
+                        <p class="text-success d-flex">
+                          <i class="mdi mdi-menu-up"></i
+                          ><span>+{{high_change}}</span>
+                        </p>
+                        {% endif %}
+                      </div>
+
+                      <div class="col-auto">
+                        <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Low Price Card Example -->
+              <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-info shadow h-75">
+                  <div class="card-body-stat">
+                    <div class="row no-gutters align-items-center">
+                      <div class="col mr-2">
+                        <div
+                          class="text-xs font-weight-bold text-info text-uppercase mb-0"
+                        >
+                          Low
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                          {{low_price}}
+                        </div>
+                        {% if low_change < 0 %}
+                        <p class="text-danger d-flex">
+                          <i class="mdi mdi-menu-down"></i
+                          ><span>{{low_change}}</span>
+                        </p>
+                        {% else %}
+                        <p class="text-success d-flex">
+                          <i class="mdi mdi-menu-up"></i
+                          ><span>+{{low_change}}</span>
+                        </p>
+                        {% endif %}
+                      </div>
+                      <div class="col-auto">
+                        <i class="fas fa-money-bill fa-2x text-gray-300"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Close Price Card Example -->
+              <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-warning shadow h-75">
+                  <div class="card-body-stat">
+                    <div class="row no-gutters align-items-center">
+                      <div class="col mr-2">
+                        <div
+                          class="text-xs font-weight-bold text-warning text-uppercase mb-0"
+                        >
+                          Close
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                          {{close_price}}
+                        </div>
+                        {% if close_change < 0 %}
+                        <p class="text-danger d-flex">
+                          <i class="mdi mdi-menu-down"></i
+                          ><span>{{close_change}}</span>
+                        </p>
+                        {% else %}
+                        <p class="text-success d-flex">
+                          <i class="mdi mdi-menu-up"></i
+                          ><span>+{{close_change}}</span>
+                        </p>
+                        {% endif %}
+                      </div>
+                      <div class="col-auto">
+                        <i class="fas fa-lock fa-2x"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <!-- End of Main Content -->
 
-            <!-- Footer -->
-            <footer class="sticky-footer bg-white">
-                <div class="container my-auto">
-                    <div class="copyright text-center my-auto">
-                        <span>Copyright &copy; Monash University Malaysia</span>
+            <!-- Content Row -->
+
+            <div class="row">
+              <!-- Prediction Graph -->
+              <div class="col-xl-8 col-lg-7">
+                <h5 class="m-0 my-md-2 font-weight-mediumer text-gray-900">
+                  Prediction Graph
+                </h5>
+                <div class="card shadow mb-4">
+                  <div
+                    class="d-flex flex-row align-items-center justify-content-between"
+                  >
+                    <div class="dropdown no-arrow">
+                      <a
+                        class="dropdown-toggle"
+                        href="#"
+                        role="button"
+                        id="dropdownMenuLink"
+                        data-toggle="dropdown"
+                        aria-haspopup="true"
+                        aria-expanded="false"
+                      >
+                        <i
+                          class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"
+                        ></i>
+                      </a>
+                      <div
+                        class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
+                        aria-labelledby="dropdownMenuLink"
+                      >
+                        <div class="dropdown-header">Dropdown Header:</div>
+                        <a class="dropdown-item" href="#">Action</a>
+                        <a class="dropdown-item" href="#">Another action</a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="#"
+                          >Something else here</a
+                        >
+                      </div>
                     </div>
+                  </div>
+                  <!-- Card Body -->
+                  <div class="card-body">
+                    <div id="chart" class="chart"></div>
+                  </div>
                 </div>
-            </footer>
-            <!-- End of Footer -->
+              </div>
 
+              <!-- Statistics Overview Card -->
+              <div class="col-xl-4 col-lg-5">
+                <h5 class="m-0 my-md-2 font-weight-mediumer text-gray-900">
+                  Statistics Overview
+                </h5>
+                <div class="card shadow mb-4">
+                  <!-- Card Header - Dropdown -->
+                  <div
+                    class="d-flex flex-row align-items-center justify-content-between"
+                  ></div>
+                  <!-- Card Body -->
+                  <div class="card-body height-100">
+                    <div class="h6 mb-0 font-weight-bold text-gray-900">
+                      {{stock_symbol}}
+                    </div>
+                    <div class="h2 mb-0 font-weight-bold text-gray-900">
+                      {{close_price}}
+                      <span
+                        class="font-weight-normal text-black-50"
+                        style="font-size: 15px"
+                        >{{currency}} {% if close_change < 0 %}
+                        <p class="text-danger d-flex">
+                          {{close_change}} ({{close_percentage_change}}%)
+                        </p>
+                        {% else %}
+                        <p class="text-success d-flex">
+                          +{{close_change}} ({{close_percentage_change}}%)
+                        </p>
+                        {% endif %}
+                      </span>
+                    </div>
+                    <div class="row mb-2" style="font-size: 12px">
+                      <div class="col text-gray-900">{{low_price}}</div>
+                      <div class="col text-center text-gray-800">
+                        DAY'S RANGE
+                      </div>
+                      <div class="col text-right text-gray-900">
+                        {{high_price}}
+                      </div>
+                    </div>
+                    <div class="progress mb-4" style="height: 10px">
+                      <div
+                        class="progress-bar bg-success"
+                        role="progressbar"
+                        style="width: {{day_change_progress}}%"
+                        aria-valuemin="0"
+                        aria-valuemax="100"
+                      ></div>
+                    </div>
+                    <div class="row mb-2" style="font-size: 12px">
+                      <div class="col text-gray-900">{{fiftyTwoWeeksLow}}</div>
+                      <div class="col text-center text-gray-800">
+                        52 WEEK RANGE
+                      </div>
+                      <div class="col text-right text-gray-900">
+                        {{fiftyTwoWeeksHigh}}
+                      </div>
+                    </div>
+                    <div class="progress mb-5" style="height: 10px">
+                      <div
+                        class="progress-bar bg-success"
+                        role="progressbar"
+                        style="width: {{fiftyTwo_change_progress}}%"
+                        aria-valuemin="0"
+                        aria-valuemax="100"
+                      ></div>
+                    </div>
+                    <div class="row mb-1" style="font-size: 12px">
+                      <div class="col-md-8 text-gray-800">PREVIOUS CLOSE</div>
+                      <div class="col-md-4 ml-auto text-right text-gray-900">
+                        {{previous_close}}
+                      </div>
+                    </div>
+                    <div class="row mb-1" style="font-size: 12px">
+                      <div class="col-md-8 text-gray-800">OPEN</div>
+                      <div class="col-md-4 ml-auto text-right text-gray-900">
+                        {{open_price}}
+                      </div>
+                    </div>
+                    <div class="row mb-1" style="font-size: 12px">
+                      <div class="col-md-8 text-gray-800">VOLUME</div>
+                      <div class="col-md-4 ml-auto text-right text-gray-900">
+                        {{volume}}
+                      </div>
+                    </div>
+                    <div class="row mb-1" style="font-size: 12px">
+                      <div class="col-md-8 text-gray-800">AVERAGE VOLUME</div>
+                      <div class="col-md-4 ml-auto text-right text-gray-900">
+                        {{average_vol}}
+                      </div>
+                    </div>
+                    <div class="row mb-1" style="font-size: 12px">
+                      <div class="col-md-8 text-gray-800">
+                        MARKET CAPITALIZATION
+                      </div>
+                      <div class="col-md-4 ml-auto text-right text-gray-900">
+                        {{market_cap}}
+                      </div>
+                    </div>
+                    <div class="row mb-1" style="font-size: 12px">
+                      <div class="col-md-8 text-gray-800">
+                        DIVIDENDS YIELD (FY)
+                      </div>
+                      <div class="col-md-4 ml-auto text-right text-gray-900">
+                        {{dividend_rate}}
+                      </div>
+                    </div>
+                    <div class="row mb-1" style="font-size: 12px">
+                      <div class="col-md-8 text-gray-800">
+                        PRICE TO EARNINGS RATIO (TTM)
+                      </div>
+                      <div class="col-md-4 ml-auto text-right text-gray-900">
+                        {{pe}}
+                      </div>
+                    </div>
+                    <div class="row mb-1" style="font-size: 12px">
+                      <div class="col-md-8 text-gray-800">BASIC EPS (TTM)</div>
+                      <div class="col-md-4 ml-auto text-right text-gray-900">
+                        {{eps}}
+                      </div>
+                    </div>
+                    <div class="row mb-1" style="font-size: 12px">
+                      <div class="col-md-8 text-gray-800">SHARES FLOAT</div>
+                      <div class="col-md-4 ml-auto text-right text-gray-900">
+                        {{share_float}}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Content Row -->
+            <div class="row">
+              <!-- Content Column -->
+              <div class="col-lg-12 mb-4">
+                <!-- Finance Card Example -->
+                <h5 class="m-0 my-md-2 font-weight-mediumer text-gray-900">
+                  Financials
+                </h5>
+                <div class="card shadow mb-1">
+                  <div class="card-body height-100">
+                    <!-- Tabs content -->
+                    <div class="tabs-container">
+                      <nav class="sliding-tabs">
+                        <div class="selector"></div>
+                        <a
+                          href="#"
+                          class="active tablinks"
+                          onclick="openTab(event, 'Summary')"
+                          >Summary</a
+                        >
+                        <a
+                          href="#"
+                          class="tablinks"
+                          onclick="openTab(event, 'IncomeStatement')"
+                          >Income Statement</a
+                        >
+                        <a
+                          href="#"
+                          class="tablinks"
+                          onclick="openTab(event, 'BalanceSheet')"
+                          >Balance Sheet</a
+                        >
+                        <a
+                          href="#"
+                          class="tablinks"
+                          onclick="openTab(event, 'CashFlow')"
+                          >Cash Flow</a
+                        >
+                        <a
+                          href="#"
+                          class="tablinks"
+                          onclick="openTab(event, 'Profile')"
+                          >Profile</a
+                        >
+                      </nav>
+                    </div>
+                    <div id="Summary" class="tabcontent" style="display: block">
+                      <div class="row">
+                        <div id="earning" class="chart-container"></div>
+                        <div id="revenue" class="chart-container"></div>
+                      </div>
+                      <div class="row">
+                        <div
+                          id="income_statement_graph"
+                          class="chart-container"
+                        ></div>
+                        <div
+                          id="balance_sheet_graph"
+                          class="chart-container"
+                        ></div>
+                      </div>
+                    </div>
+
+                    <div id="Profile" class="tabcontent" style="display: None">
+                      <p class="text-justify">{{business_profile}}</p>
+                    </div>
+
+                    <div
+                      id="IncomeStatement"
+                      class="tabcontent"
+                      style="display: None"
+                    >
+                      <table class>
+                        {{income_statement|safe}}
+                      </table>
+                    </div>
+
+                    <div
+                      id="BalanceSheet"
+                      class="tabcontent"
+                      style="display: None"
+                    >
+                      <table>
+                        {{balance_sheet|safe}}
+                      </table>
+                    </div>
+
+                    <div id="CashFlow" class="tabcontent" style="display: None">
+                      <table>
+                        {{cash_flow|safe}}
+                      </table>
+                    </div>
+
+                    <script>
+                      var tabs = $(".sliding-tabs");
+                      var selector = $(".sliding-tabs").find("a").length;
+                      var activeItem = tabs.find(".active");
+                      var activeWidth = activeItem.innerWidth();
+                      $(".selector").css({
+                        left: activeItem.position.left + "px",
+                        width: activeWidth + "px",
+                      });
+
+                      $(".sliding-tabs").on("click", "a", function (e) {
+                        e.preventDefault();
+                        $(".sliding-tabs a").removeClass("active");
+                        $(this).addClass("active");
+                        var activeWidth = $(this).innerWidth();
+                        var itemPos = $(this).position();
+                        $(".selector").css({
+                          left: itemPos.left + "px",
+                          width: activeWidth + "px",
+                        });
+                      });
+
+                      function openTab(evt, tabName) {
+                        evt.preventDefault();
+                        var i, tabcontent, tablinks;
+                        tabcontent =
+                          document.getElementsByClassName("tabcontent");
+                        for (i = 0; i < tabcontent.length; i++) {
+                          tabcontent[i].style.display = "none";
+                        }
+
+                        document.getElementById(tabName).style.display =
+                          "block";
+                      }
+                    </script>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- /.container-fluid -->
+          </div>
+          <!-- End of Main Content -->
+
+          <!-- Footer -->
+          <footer class="sticky-footer bg-white">
+            <div class="container my-auto">
+              <div class="copyright text-center my-auto">
+                <span>Copyright &copy; Monash University Malaysia</span>
+              </div>
+            </div>
+          </footer>
+          <!-- End of Footer -->
         </div>
-        </div>
-        <!-- End of Content Wrapper -->
-
-
-
+        {% else %}
+        
+        {% endif %}
+      </div>
+      <!-- End of Content Wrapper -->
     </div>
 
     <!-- End of Page Wrapper -->
 
-
-
     <!-- Bootstrap core JavaScript-->
-<!--    <script src="vendor/jquery/jquery.min.js"></script>-->
+    <!--    <script src="vendor/jquery/jquery.min.js"></script>-->
     <script src="{{ url_for('static', filename='/vendor/jquery/jquery.min.js') }}"></script>
 
-<!--    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>-->
+    <!--    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>-->
     <script src="{{ url_for('static', filename='/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 
     <!-- Core plugin JavaScript-->
-<!--    <script src="vendor/jquery-easing/jquery.easing.min.js"></script>-->
+    <!--    <script src="vendor/jquery-easing/jquery.easing.min.js"></script>-->
     <script src="{{ url_for('static', filename='/vendor/jquery-easing/jquery.easing.min.js') }}"></script>
 
-
     <!-- Custom scripts for all pages-->
-<!--    <script src="js/sb-admin-2.min.js"></script>-->
-<!--    <script src="{{ url_for('static', filename='js/sb-admin-2.min.js') }}"></script>-->
+    <!--    <script src="js/sb-admin-2.min.js"></script>-->
+    <!--    <script src="{{ url_for('static', filename='js/sb-admin-2.min.js') }}"></script>-->
 
     <!-- Page level plugins -->
     <script src="{{ url_for('static', filename='/vendor/chart.js/Chart.min.js') }}"></script>
 
     <script>
-        var graphs = {{graphJSON | safe}};
-        Plotly.newPlot('chart', graphs, {
-        'title': 'Stock Price Forecast Chart',
-        'xaxis': {
-        'title': "Date"
-        },
-        'yaxis': {
-        'title': "Price"
+      function validateForm() {
+        var valid = true;
+        let form = document.forms["form"];
+        if (form.companyname == "") {
+            alert("Please enter a stock name/abbr.");
+            valid = false;
+        if (form.ReferenceStartPeriod) {
+          alert("Please choose a reference start date.");
+          valid = false;
         }
-        });
+        if (form.PredictionDate) {
+          alert("Please choose a prediction date.");
+          valid = false;
+        }
+          return valid;
+        }
+      }
     </script>
 
     <script>
-        var graphs = {{earningJSON | safe}};
-        Plotly.newPlot('earning', graphs, {
-        'title': 'Earning Chart',
-        'xaxis': {
-        'title': "Year"
-        },
-        'yaxis': {
-        'title': "Price"
-        }
-        });
+      var graphs = {{graphJSON | safe}};
+      Plotly.newPlot('chart', graphs, {
+      'title': 'Stock Price Forecast Chart',
+      'xaxis': {
+      'title': "Date"
+      },
+      'yaxis': {
+      'title': "Price"
+      }
+      });
+    </script>
+
+    <script>
+      var graphs = {{earningJSON | safe}};
+      Plotly.newPlot('earning', graphs, {
+      'title': 'Earning',
+      'xaxis': {
+      'title': "Year"
+      },
+      'yaxis': {
+      'title': "Price"
+      }
+      });
     </script>
     <script>
-        var graphs = {{revenueJSON | safe}};
-        Plotly.newPlot('revenue', graphs, {
-        'title': 'Revenue Chart',
-        'xaxis': {
-        'title': "Year"
-        },
-        'yaxis': {
-        'title': "Price"
-        }
-        });
+      var graphs = {{revenueJSON | safe}};
+      Plotly.newPlot('revenue', graphs, {
+      'title': 'Revenue',
+      'xaxis': {
+      'title': "Year"
+      },
+      'yaxis': {
+      'title': "Price"
+      }
+      });
     </script>
-</body>
-
+    <script>
+      var graphs = {{incomeStatementJSON | safe}};
+      Plotly.newPlot('income_statement_graph', graphs, {
+      'title': 'Income Statement',
+      'xaxis': {
+      'title': "Year"
+      },
+      'yaxis': {
+      'title': "Price"
+      }
+      });
+    </script>
+    <script>
+      var graphs = {{balanceSheetJSON | safe}};
+      Plotly.newPlot('balance_sheet_graph', graphs, {
+      'title': 'Balance Sheet',
+      'xaxis': {
+      'title': "Year"
+      },
+      'yaxis': {
+      'title': "Price"
+      }
+      });
+    </script>
+  </body>
 </html>
