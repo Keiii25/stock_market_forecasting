@@ -1,6 +1,5 @@
 from unicodedata import name
 import numpy as np
-import requests
 import datetime
 import numpy as np
 import pandas as pd
