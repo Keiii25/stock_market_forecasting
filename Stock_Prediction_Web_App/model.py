@@ -205,9 +205,6 @@ class Model():
     def history_info(self,info):
         return round(self.dataset[info].iloc[-1], 2)
 
-    def business_info(self):
-        return self.ticket.info['longBusinessSummary']
-
     def income_statement(self):
         return self.ticket.financials
 
@@ -224,7 +221,11 @@ class Model():
         return self.dataset
 
     def ticker(self, obj):
-        return self.ticket.info[obj]
+        try:
+            return self.ticket.info[obj]
+        except:
+            return None
+
 
 stock_symbol = "AAPL"
 start_date = "2022-08-01"
