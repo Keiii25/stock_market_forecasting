@@ -51,11 +51,10 @@ def predict_plot():
     arima.extract_data(stock_symbol, start_date, end_date)
 
     #train the data 
-    arima.model_train()
+    arima.load_model()
 
     #Predict the stock price for a given date
-    stock_predict = round(arima.predict(prediction_date)[1],2)
-
+    stock_predict = round(arima.prediction(prediction_date)[1],2)
 
     #get the prediction graph
     graph_data = arima.plot_data()

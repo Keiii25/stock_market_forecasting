@@ -7,15 +7,16 @@ import pandas as pd
 
 import yfinance as yf
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from statsmodels.tsa.statespace.sarimax import SARIMAX
-from datetime import datetime
+from datetime import datetime, date
 from pandas.tseries.offsets import DateOffset
 from plotly.graph_objs import Scatter, Bar
 import plotly.express as px
 
-
-
+from dateutil.relativedelta import relativedelta
+from darts.models import NBEATSModel
+import os
 
 class Model():
     '''
@@ -27,21 +28,18 @@ class Model():
         '''
         self.ticket = None
         self.dataset = None
+        self.stock_symbol = "AAPL"
         
-    def extract_data(self, stock_symbol, start, end):
-                
+    def extract_data(self, start, end):           
         '''
         INPUT:
-            stock_symbol - symbol for company stock
             start - start_date for training period(Reference Period)
             end - end_date for training period(Reference Period)
         OUTPUT:
             training_set - time series dataframe for company stock
         '''    
         #get data from quandl finance api
-
-
-        self.ticket = yf.Ticker(stock_symbol)
+        self.ticket = yf.Ticker(self.stock_symbol)
         self.dataset= self.ticket.history(start=start,end=end)
         df = self.ticket.history(start=start,end=end)
         training_set = df.iloc[:,3]
@@ -50,59 +48,42 @@ class Model():
 
         return self.training_set
 
-    
-   
-
-    def model_train(self):
+    def load_model(self):
         '''
         INPUT: 
                
         OUTPUT:
             trained_model - model trained with the input date
         '''
+        #Load trained model 
+        logs_path = os.path.join(os.getcwd(), "2022-09-16")
+        model_name = "0_NBEATSModel_corr_0.75_icl150_ocl30_gTrue_s30_b1_l4_lw512_bs32_e100_start2019-01-02_end2022-07-01"
+        model = NBEATSModel.load_from_checkpoint(model_name = model_name, work_dir = logs_path, best = False)
 
-        #Prepare the model
+        return model
 
-       
-
-        model = SARIMAX(self.training_set['Close'],order=(0,0,1),
-                        trend='n',
-                        seasonal_order=(1,1,1,12))
-        self.results = model.fit()
-
-        return self.results
-
-
-
-    def predict(self, predict_date):
+    def prediction(self, predict_date):
         '''
         INPUT:
             predict_date - date for prediction
         OUTPUT:
-            Prediction - Prediction till date  
-        '''
-        # data to be predicted - last date in training set
-        pred_date = datetime.strptime(predict_date, '%Y-%m-%d')
-        diff = pred_date - self.training_set['Date'].iloc[-1]
-        span = diff.days +1
-        
-        #get the dates uptill the predicted date
-        future_date = [self.training_set['Date'].iloc[-1] + DateOffset(days = i) for i in range(0, span)]
+            Prediction - date and log stock returns of the predicted stock   
+        '''        
+        # Today's Date - YY-mm-dd        
+        today = date.today()
+        one_year_before = today - relativedelta (years= 1)
+                
+        # Number of days to be predicted
+        pred_date = datetime.strptime(predict_date, '%Y-%m-%d').date()
+        n = (pred_date - today).days
 
-        #convert to dataframe
-        future_date_df1 = pd.DataFrame(future_date, columns = ["Date"])[1:]#.set_index('Date')
+        # Extract the 1 year dataset before today's date
+        predict_data = self.extract_data(one_year_before, today)
 
-        #get the prediction for the future dates
-        start_, end_ = len(self.training_set)+1, len(self.training_set)+span
-        future_date_df2 = pd.DataFrame(self.results.predict(start = start_, end = end_, dynamic= True).values)
-
-        future_date_df2.columns = ['Forecast']
-
-        self.df = future_date_df1.join(future_date_df2)
-
-        return self.df.iloc[-1]
-
-
+        model = self.load_model()
+        result = model.predict(n, series=predict_data)
+        print(result)
+        return result
 
     def plot_data(self):
 
@@ -201,7 +182,6 @@ class Model():
         ]
         return graph_data
 
-        
     def history_info(self,info):
         return round(self.dataset[info].iloc[-1], 2)
 
@@ -229,6 +209,8 @@ class Model():
 stock_symbol = "AAPL"
 start_date = "2022-08-01"
 end_date =  "2022-09-03"
-prediction_date = "2022-09-27"
+prediction_date = "2022-10-10"
 m = Model()
-m.extract_data(stock_symbol, start_date, end_date)
+#m.extract_data(start_date, end_date)
+#m.load_model()
+m.prediction(prediction_date)
