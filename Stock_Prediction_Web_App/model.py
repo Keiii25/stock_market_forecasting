@@ -12,10 +12,6 @@ from statsmodels.tsa.statespace.sarimax import SARIMAX
 from datetime import datetime
 from pandas.tseries.offsets import DateOffset
 from plotly.graph_objs import Scatter, Bar
-import plotly.express as px
-
-
-
 
 class Model():
     '''
@@ -114,24 +110,36 @@ class Model():
             graph_data - containing data for ploting
         '''
 
+        last_row = self.training_set.tail(1)
+        last_row.rename(columns={'Close': 'Forecast'}, inplace=True)
+        df = pd.concat([last_row, self.df])
 
         graph_data = [
-        
                 Scatter(
                     x=self.training_set['Date'],
                     y=self.training_set['Close'],
+                    hovertemplate=
+                    '<i>Date</i>: %{x}' +
+                    '<br><b>Period</b>: Reference <br>' +
+                    '<i>Price</i>: %{y:.2f}',
                     name='Reference period',
                     marker=dict(color='#5D4E7B')
-                ), 
+                ),
                 Scatter(
-                     x=self.df['Date'],
-                    y=self.df['Forecast'],
+                     x=df['Date'],
+                    y=df['Forecast'],
+                    hovertemplate=
+                    '<i>Date</i>: %{x}' +
+                    '<br>Period: Forecast <br>' +
+                    '<i>Price</i>: %{y:.2f}',
                     name='Forecast period',
                     marker=dict(color ='#FD8A75')
                 )
             ]
-        
+
         return graph_data
+
+
 
     def plot_earning(self):
         '''
