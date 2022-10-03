@@ -1,0 +1,11 @@
+numpy
+requests
+datetime
+matplotlib
+numpy
+pandas
+quandl
+datetime 
+Flask
+statsmodels
+plotly
