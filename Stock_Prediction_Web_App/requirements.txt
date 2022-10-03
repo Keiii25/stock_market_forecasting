@@ -9,3 +9,4 @@ datetime
 Flask
 statsmodels
 plotly
+flask_bootstrap
