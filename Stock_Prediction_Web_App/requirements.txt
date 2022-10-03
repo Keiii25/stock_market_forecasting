@@ -12,3 +12,4 @@ plotly
 flask_bootstrap
 yfinance
 numerize
+gunicorn
