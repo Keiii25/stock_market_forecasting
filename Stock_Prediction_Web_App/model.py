@@ -12,8 +12,6 @@ from statsmodels.tsa.statespace.sarimax import SARIMAX
 from datetime import datetime
 from pandas.tseries.offsets import DateOffset
 from plotly.graph_objs import Scatter, Bar
-import plotly.express as px
-
 
 
 
