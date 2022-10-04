@@ -14,13 +14,6 @@ from datetime import timedelta
 app = Flask(__name__, static_url_path='/static')
 Bootstrap(app)
 
-# @app.route('/')
-
-#this links to the index page of the web app
-# @app.route('/',  methods=['GET'])
-# def index():
-#     return render_template('dashboard.html')
-
 #this links to the result page of the web app
 @app.route('/', methods=['GET', 'POST'])
 def predict_plot():
@@ -34,6 +27,7 @@ def predict_plot():
         end_date = datetime.strftime(datetime.strptime(PredictionDate, '%Y-%m-%d')-timedelta(days=1), '%Y-%m-%d') #datetime(2017, 12, 31)
         prediction_date = PredictionDate
     else:
+
     #get the varaible inputs from the user
         companyname = request.form["companyname"]
         ReferenceStartPeriod = request.form["ReferenceStartPeriod"]
@@ -44,14 +38,23 @@ def predict_plot():
         end_date = datetime.strftime(datetime.strptime(PredictionDate, '%Y-%m-%d')-timedelta(days=1), '%Y-%m-%d') #datetime(2017, 12, 31)
         prediction_date = PredictionDate
 
+    error = False
     #build model
     arima = Model()
 
+    try:
+        arima.extract_data(stock_symbol, start_date, end_date)
+        arima.model_train()
+    except:
+        error = True
     #extract data from api
-    arima.extract_data(stock_symbol, start_date, end_date)
+    if error:
+        stock_symbol = 'AAPL'
+        arima.extract_data(stock_symbol, start_date, end_date)
+        arima.model_train()
 
     #train the data 
-    arima.model_train()
+    # arima.model_train()
 
     #Predict the stock price for a given date
     stock_predict = round(arima.predict(prediction_date)[1],2)
@@ -97,7 +100,7 @@ def predict_plot():
     fiftyTwo_bar = ((fiftyTwo_high - current_close)/(fiftyTwo_high-fiftyTwo_low))*100
 
     return render_template('dashboard.html',
-                            predict = True, 
+                            error = error, 
                         stock_predict = stock_predict,
                         graphJSON = graphJSON,
                         earningJSON= earningGraphJSON,

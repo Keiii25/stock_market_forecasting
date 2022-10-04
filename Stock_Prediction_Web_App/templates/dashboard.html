@@ -60,52 +60,118 @@
         <div class="h6 text-gray-900 mb-4 pl-2">
           Choose a stock and select the date to forecast the stock price.
         </div>
-        <form name = 'form' method="POST">
+        <form
+          name="input_form"
+          action=""
+          method="POST"
+          onsubmit="return form_validate()"
+        >
+          <script>
+            function form_validate() {
+              var valid = true;
+              today = new Date();
+              startDate = new Date(
+                document.input_form.ReferenceStartPeriod.value
+              );
+              predictionDate = new Date(
+                document.input_form.PredictionDate.value
+              );
+              if (
+                startDate.getYear() > today.getYear() ||
+                startDate.getMonth() > today.getMonth() ||
+                (startDate.getMonth() == today.getMonth() &&
+                  startDate.getDay() > today.getDay())
+              ) {
+                document.getElementById("ReferenceStartPeriod").innerHTML =
+                  "Start date must be in the past";
+                document.getElementById("ReferenceStartPeriod").style.display =
+                  "block";
+                valid = false;
+              } else {
+                document.getElementById("ReferenceStartPeriod").innerHTML =
+                  "Start date must be in the past";
+                document.getElementById("ReferenceStartPeriod").style.display =
+                  "none";
+              }
+              if (
+                predictionDate.getYear() < today.getYear() ||
+                predictionDate.getMonth() < today.getMonth() ||
+                predictionDate.getDay() < today.getDay()
+              ) {
+                document.getElementById("PredictionDate").innerHTML =
+                  "Prediction date must be in the future";
+                document.getElementById("PredictionDate").style.display =
+                  "block";
+                valid = false;
+              } else {
+                document.getElementById("PredictionDate").innerHTML =
+                  "Prediction date must be in the future";
+                document.getElementById("PredictionDate").style.display =
+                  "none";
+              }
+              return valid;
+            }
+          </script>
           <div class="input-label text-uppercase text-gray-800 pl-2">
-            Stock Name/ 
-            Abbreviation
+            Stock Name/ Abbreviation
           </div>
           <input
             type="text"
             name="companyname"
-            class="form-control rounded-input input-font mb-4"
+            class="form-control rounded-input input-font"
             placeholder="Search for stock"
             required
           />
-          <div class="input-label text-uppercase text-gray-800 pl-2">
-            Start Date
+          {% if error %}
+          <div
+            id="companyname"
+            class="invalid-label ml-1"
+            style="display: block"
+          >Invalid Stock Name/Abbreviation</div>
+          {% else %} {% endif %}
+          <div class="input-label text-uppercase text-gray-800 pl-2 mt-4">
+            Reference Start Date
           </div>
           <input
             type="date"
             name="ReferenceStartPeriod"
-            class="form-control rounded-input input-font mb-4"
-            placeholder="Start Date"
+            class="form-control rounded-input input-font"
             required
           />
-          <div class="input-label text-uppercase text-gray-800 pl-2">
+          <div
+            id="ReferenceStartPeriod"
+            class="invalid-label ml-1"
+            style="display: None"
+          ></div>
+          <div class="input-label text-uppercase text-gray-800 pl-2 mt-4">
             Forecast Date
           </div>
           <input
             type="date"
             name="PredictionDate"
-            class="form-control rounded-input input-font mb-4"
-            placeholder="Forecast Date"
+            class="form-control rounded-input input-font"
             required
           />
+          <div
+            id="PredictionDate"
+            class="invalid-label ml-1"
+            style="display: None"
+            required
+          ></div>
           <button
             type="submit"
-            class="btn btn-lg btn-success text-uppercase"
-            value="Submit"
+            class="btn btn-lg btn-success text-uppercase mt-4"
           >
-            Build Model
+            Submit
           </button>
         </form>
       </div>
+
       <!-- End of Sidebar -->
 
       <!-- Content Wrapper -->
       <div id="content-wrapper" class="d-flex flex-column pt-4 bg-content">
-        {% if predict %}
+       
         <!-- Main Content -->
         <div id="content">
           <!-- Begin Page Content -->
@@ -596,9 +662,6 @@
           </footer>
           <!-- End of Footer -->
         </div>
-        {% else %}
-        
-        {% endif %}
       </div>
       <!-- End of Content Wrapper -->
     </div>
@@ -628,16 +691,16 @@
         var valid = true;
         let form = document.forms["form"];
         if (form.companyname == "") {
-            alert("Please enter a stock name/abbr.");
+          alert("Please enter a stock name/abbr.");
+          valid = false;
+          if (form.ReferenceStartPeriod) {
+            alert("Please choose a reference start date.");
             valid = false;
-        if (form.ReferenceStartPeriod) {
-          alert("Please choose a reference start date.");
-          valid = false;
-        }
-        if (form.PredictionDate) {
-          alert("Please choose a prediction date.");
-          valid = false;
-        }
+          }
+          if (form.PredictionDate) {
+            alert("Please choose a prediction date.");
+            valid = false;
+          }
           return valid;
         }
       }
