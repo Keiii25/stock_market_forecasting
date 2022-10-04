@@ -14,12 +14,6 @@ from datetime import timedelta
 app = Flask(__name__, static_url_path='/static')
 Bootstrap(app)
 
-# @app.route('/')
-
-#this links to the index page of the web app
-# @app.route('/',  methods=['GET'])
-# def index():
-#     return render_template('dashboard.html')
 
 #this links to the result page of the web app
 @app.route('/', methods=['GET', 'POST'])
@@ -31,7 +25,7 @@ def predict_plot():
         PredictionDate = datetime.strftime(datetime.today() + timedelta(days=1), '%Y-%m-%d')
         stock_symbol = companyname.upper() #["WIKI/AMZN"]
         start_date = ReferenceStartPeriod #datetime(2017, 1, 1)
-        end_date = datetime.strftime(datetime.strptime(PredictionDate, '%Y-%m-%d')-timedelta(days=1), '%Y-%m-%d') #datetime(2017, 12, 31)
+        end_date = datetime.strftime(datetime.strptime(PredictionDate, '%Y-%m-%d')-timedelta(days=1), '%Y-%m-%d')
         prediction_date = PredictionDate
     else:
     #get the varaible inputs from the user
@@ -41,7 +35,7 @@ def predict_plot():
         PredictionDate = request.form["PredictionDate"]
         stock_symbol = companyname.upper() #["WIKI/AMZN"]
         start_date = ReferenceStartPeriod #datetime(2017, 1, 1)
-        end_date = datetime.strftime(datetime.strptime(PredictionDate, '%Y-%m-%d')-timedelta(days=1), '%Y-%m-%d') #datetime(2017, 12, 31)
+        end_date = datetime.strftime(datetime.strptime(PredictionDate, '%Y-%m-%d')-timedelta(days=1), '%Y-%m-%d')
         prediction_date = PredictionDate
 
     #build model

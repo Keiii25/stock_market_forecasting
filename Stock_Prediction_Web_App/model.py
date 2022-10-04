@@ -109,7 +109,7 @@ class Model():
         OUTPUT
             graph_data - containing data for ploting
         '''
-
+        # merge the last row to the forecast dataframe
         last_row = self.training_set.tail(1)
         last_row.rename(columns={'Close': 'Forecast'}, inplace=True)
         df = pd.concat([last_row, self.df])
