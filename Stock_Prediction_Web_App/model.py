@@ -208,7 +208,9 @@ class Model():
             Bar(x= balance_sheet['Year'].dt.year ,y= balance_sheet['Total Liab'], name='Total Liability', marker=dict(color ='#FD8A75')),
         ]
         return graph_data
-
+    
+    def business_info(self):
+        return self.ticket.info['longBusinessSummary']
         
     def history_info(self,info):
         return round(self.dataset[info].iloc[-1], 2)

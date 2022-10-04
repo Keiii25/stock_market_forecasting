@@ -122,6 +122,7 @@ def predict_plot():
                         high_change=  arima.history_change('High'),
                         low_change =  arima.history_change('Low'),
                         close_change= arima.history_change('Close'),
+                        business_profile = arima.business_info(),
                         previous_close = numerize.numerize(previous_close_price,2),
                         volume= numerize.numerize(arima.ticker('volume'),2),
                         average_vol = numerize.numerize(arima.ticker('averageVolume'),2),
