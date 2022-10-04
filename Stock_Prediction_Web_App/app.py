@@ -24,7 +24,7 @@ def predict_plot():
         PredictionDate = datetime.strftime(datetime.today() + timedelta(days=1), '%Y-%m-%d')
         stock_symbol = companyname.upper() #["WIKI/AMZN"]
         start_date = ReferenceStartPeriod #datetime(2017, 1, 1)
-        end_date = datetime.strftime(datetime.strptime(PredictionDate, '%Y-%m-%d')-timedelta(days=1), '%Y-%m-%d') #datetime(2017, 12, 31)
+        end_date = datetime.strftime(datetime.strptime(PredictionDate, '%Y-%m-%d')-timedelta(days=1), '%Y-%m-%d')
         prediction_date = PredictionDate
     else:
 
@@ -35,7 +35,7 @@ def predict_plot():
         PredictionDate = request.form["PredictionDate"]
         stock_symbol = companyname.upper() #["WIKI/AMZN"]
         start_date = ReferenceStartPeriod #datetime(2017, 1, 1)
-        end_date = datetime.strftime(datetime.strptime(PredictionDate, '%Y-%m-%d')-timedelta(days=1), '%Y-%m-%d') #datetime(2017, 12, 31)
+        end_date = datetime.strftime(datetime.strptime(PredictionDate, '%Y-%m-%d')-timedelta(days=1), '%Y-%m-%d')
         prediction_date = PredictionDate
 
     error = False
@@ -115,7 +115,6 @@ def predict_plot():
                         low_price = low_price,
                         close_price = current_close,
                         summary = history.to_html(),
-                        business_profile = arima.business_info(),
                         income_statement = income.to_html(),
                         balance_sheet = balance.to_html(),
                         cash_flow =   cash_flow.to_html(),
@@ -129,9 +128,9 @@ def predict_plot():
                         market_cap = numerize.numerize(arima.ticker('marketCap'),2),
                         dividend_rate= arima.ticker('dividendRate'),
                         currency = arima.ticker('currency'),
-                        pe =  numerize.numerize(arima.ticker('forwardPE'),2),
-                        eps =  arima.ticker('forwardEps'),
-                        share_float = numerize.numerize(arima.ticker('floatShares'),2),
+                        pe =  None if arima.ticker('forwardPE') is None else numerize.numerize(arima.ticker('forwardPE'),2),
+                        eps =  None if arima.ticker('forwardEps') is None else arima.ticker('forwardEps'),
+                        share_float = None if arima.ticker('floatShares') is None else numerize.numerize(arima.ticker('floatShares'),2),
                         close_percentage_change = numerize.numerize(percentage_change,2),
                         fiftyTwoWeeksHigh = numerize.numerize(fiftyTwo_high,2),
                         fiftyTwoWeeksLow=numerize.numerize(fiftyTwo_low, 2),

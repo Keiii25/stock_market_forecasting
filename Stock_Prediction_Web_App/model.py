@@ -13,8 +13,6 @@ from datetime import datetime
 from pandas.tseries.offsets import DateOffset
 from plotly.graph_objs import Scatter, Bar
 
-
-
 class Model():
     '''
     A model for predicting the stock price
@@ -111,25 +109,37 @@ class Model():
         OUTPUT
             graph_data - containing data for ploting
         '''
-
+        # merge the last row to the forecast dataframe
+        last_row = self.training_set.tail(1)
+        last_row.rename(columns={'Close': 'Forecast'}, inplace=True)
+        df = pd.concat([last_row, self.df])
 
         graph_data = [
-        
                 Scatter(
                     x=self.training_set['Date'],
                     y=self.training_set['Close'],
+                    hovertemplate=
+                    '<i>Date</i>: %{x}' +
+                    '<br><b>Period</b>: Reference <br>' +
+                    '<i>Price</i>: %{y:.2f}',
                     name='Reference period',
                     marker=dict(color='#5D4E7B')
-                ), 
+                ),
                 Scatter(
-                     x=self.df['Date'],
-                    y=self.df['Forecast'],
+                     x=df['Date'],
+                    y=df['Forecast'],
+                    hovertemplate=
+                    '<i>Date</i>: %{x}' +
+                    '<br>Period: Forecast <br>' +
+                    '<i>Price</i>: %{y:.2f}',
                     name='Forecast period',
                     marker=dict(color ='#FD8A75')
                 )
             ]
-        
+
         return graph_data
+
+
 
     def plot_earning(self):
         '''
@@ -203,9 +213,6 @@ class Model():
     def history_info(self,info):
         return round(self.dataset[info].iloc[-1], 2)
 
-    def business_info(self):
-        return self.ticket.info['longBusinessSummary']
-
     def income_statement(self):
         return self.ticket.financials
 
@@ -222,7 +229,11 @@ class Model():
         return self.dataset
 
     def ticker(self, obj):
-        return self.ticket.info[obj]
+        try:
+            return self.ticket.info[obj]
+        except:
+            return None
+
 
 stock_symbol = "AAPL"
 start_date = "2022-08-01"
