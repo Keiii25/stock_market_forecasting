@@ -2233,6 +2233,10 @@ textarea.form-control.is-invalid {
 .input-label {
   font-size: 80%
 }
+.invalid-label {
+  font-size: 70%;
+  color: red
+}
 .btn {
   display: inline-block;
   width: 100%;
