@@ -119,9 +119,9 @@ class Model():
                     x=self.training_set['Date'],
                     y=self.training_set['Close'],
                     hovertemplate=
-                    '<i>Date</i>: %{x}' +
-                    '<br><b>Period</b>: Reference <br>' +
-                    '<i>Price</i>: %{y:.2f}',
+                    '<i>Date</i>: <b>%{x}</b>' +
+                    '<br>Period: <b>Reference</b> <br>' +
+                    '<i>Price</i>: <b>%{y:.2f}</b>',
                     name='Reference period',
                     marker=dict(color='#5D4E7B')
                 ),
@@ -129,9 +129,9 @@ class Model():
                      x=df['Date'],
                     y=df['Forecast'],
                     hovertemplate=
-                    '<i>Date</i>: %{x}' +
-                    '<br>Period: Forecast <br>' +
-                    '<i>Price</i>: %{y:.2f}',
+                    '<i>Date</i>: <b>%{x}</b>' +
+                    '<br>Period: <b>Forecast</b> <br>' +
+                    '<i>Price</i>: <b>%{y:.2f}</b>',
                     name='Forecast period',
                     marker=dict(color ='#FD8A75')
                 )
