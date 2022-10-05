@@ -1,6 +1,7 @@
 from pickle import TRUE
 from unicodedata import name
 from black import NewLine
+from matplotlib.pyplot import close
 import numpy as np
 import datetime
 import numpy as np
@@ -93,14 +94,15 @@ class Model():
         predict_data_df = pd.merge(template, predict_data_df, left_index=True, right_index=True, how="left")
         predict_data_df.fillna(method = "ffill", inplace = True) # Forward fill missing values
         predict_data_df.fillna(method = "bfill", inplace = True) # Backward fill missing values
-
+        previousdayof_today_closing = predict_data_df['Close'][-1]
+        
         # Calculate the log return of stock prices
         predict_data_df["Close"] = (np.log(predict_data_df["Close"]) - np.log(predict_data_df["Close"].shift(1)))
         predict_data_df = predict_data_df[1:]    # To remove the first row of NaN value
-        predict_data_df = predict_data_df["Close"]
-        
+        predict_data_series = predict_data_df["Close"]
+
         # Convert dataframe to timeseries
-        data = TimeSeries.from_series(predict_data_df, freq = 'B')
+        data = TimeSeries.from_series(predict_data_series, freq = 'B')
         
         # Perform prediction
         model = self.load_model()
@@ -110,14 +112,26 @@ class Model():
         # Convert timeseries to dataframe        
         result_df = result.pd_dataframe()
         result_df = result_df.rename(columns={'Close':'Log_return'})
-        print("")
-        print(result_df["Log_return"])
-        print(result_df["Log_return"][0])
-        print(type(result_df))
+        
         # Convert log return to price
+        result_df["Log_return"] = result_df["Log_return"] + np.log(previousdayof_today_closing) 
+        result_df["Log_return"] = np.exp(result_df["Log_return"])
+        result_df = result_df.rename(columns={'Log_return':'Price'})
         
+        # validation for prediction beyond the predict date
+        validation_index = 0
+        for i in range(len(result_df.index)):
+            timestamp_date = result_df.index[i]
+            required_date = datetime.strftime(timestamp_date, '%Y-%m-%d') 
+            if required_date == predict_date:
+                validation_index = i
+                break
         
-        #return result
+        # prediction result 
+        output = result_df[:validation_index+1]
+            
+        return output    
+        
 
     def plot_data(self):
 
@@ -240,11 +254,10 @@ class Model():
     def ticker(self, obj):
         return self.ticket.info[obj]
 
-stock_symbol = "AAPL"
-start_date = "2022-08-01"
-end_date =  "2022-09-03"
-prediction_date = "2022-10-10"
+
+prediction_date = "2022-10-20"
 m = Model()
 #m.extract_data(start_date, end_date)
 #m.load_model()
 m.prediction(prediction_date)
+print(m.prediction(prediction_date))
