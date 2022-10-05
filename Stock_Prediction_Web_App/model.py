@@ -15,7 +15,9 @@ from plotly.graph_objs import Scatter, Bar
 import plotly.express as px
 
 from dateutil.relativedelta import relativedelta
+from darts import TimeSeries
 from darts.models import NBEATSModel
+import pickle
 import os
 
 class Model():
@@ -77,13 +79,58 @@ class Model():
         pred_date = datetime.strptime(predict_date, '%Y-%m-%d').date()
         n = (pred_date - today).days
 
-        # Extract the 1 year dataset before today's date
-        predict_data = self.extract_data(one_year_before, today)
+        # check the column got any space or not ['Date', 'Close']
+        #print(list(self.extract_data(one_year_before, today).columns))
 
-        model = self.load_model()
-        result = model.predict(n, series=predict_data)
-        print(result)
-        return result
+        # Extract the 1 year dataset before today's date
+        TEST = False
+        # Initialize folder name for dataframes to be saved 
+        df_name = "{}_{}".format(self.stock_symbol, "prediction_function")
+        df_path = os.path.join(os.getcwd(), df_name)
+        
+        # Initialise variable to store dataframe
+        predict_data = []
+        # Initialise saved dataframe paths
+        predict_data_path = os.path.join(df_path, "predict_data.pickle")
+        
+        # Check if existing dataframe exist
+        if not TEST and os.path.isdir(df_path):
+            with open(predict_data_path, "rb") as handle:
+                predict_data = pickle.load(handle)
+        else:
+            if not TEST:
+                os.mkdir(df_path)
+            
+            predict_data.append(self.extract_data(one_year_before, today))
+        
+            if not TEST:
+                with open(os.path.join(df_path, "predict_data.pickle"), "wb") as handle:
+                    pickle.dump(predict_data, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        
+        print(type(predict_data))
+        #MOUNT_POINT = '/content/gdrive'
+       # DEFAULT_DIR = os.path.join(MOUNT_POINT, 'Shareddrives', 'Meta Learning Model Training')
+        #SAVE_DF_PATH = os.path.join(DEFAULT_DIR, "saved_dataframe")
+        #df_name = "{}_{}_{}_{}".format(SECTOR, METHOD, START_DATE, END_DATE)
+        #df_path = os.path.join(SAVE_DF_PATH, df_name)
+        #full_series_path = os.path.join(df_path, "full_series.pickle")
+        '''
+        all_series = []
+        with open(full_series_path, "rb") as handle:
+            all_series = pickle.load(handle)
+        with open(os.path.join(df_path, "full_series.pickle"), "wb") as handle:
+            pickle.dump(all_series, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        '''
+        
+        #print(TimeSeries.from_dataframe(predict_data))
+        #predict_data = predict_data.rename(columns={'Number ': 'Number'})
+        
+        
+        #model = self.load_model()
+        #result = model.predict(n, series=predict_data)
+        #print(result)
+        
+        #return result
 
     def plot_data(self):
 
