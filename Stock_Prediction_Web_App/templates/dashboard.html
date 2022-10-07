@@ -352,37 +352,6 @@
                   Prediction Graph
                 </h5>
                 <div class="card shadow mb-4">
-                  <div
-                    class="d-flex flex-row align-items-center justify-content-between"
-                  >
-                    <div class="dropdown no-arrow">
-                      <a
-                        class="dropdown-toggle"
-                        href="#"
-                        role="button"
-                        id="dropdownMenuLink"
-                        data-toggle="dropdown"
-                        aria-haspopup="true"
-                        aria-expanded="false"
-                      >
-                        <i
-                          class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"
-                        ></i>
-                      </a>
-                      <div
-                        class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
-                        aria-labelledby="dropdownMenuLink"
-                      >
-                        <div class="dropdown-header">Dropdown Header:</div>
-                        <a class="dropdown-item" href="#">Action</a>
-                        <a class="dropdown-item" href="#">Another action</a>
-                        <div class="dropdown-divider"></div>
-                        <a class="dropdown-item" href="#"
-                          >Something else here</a
-                        >
-                      </div>
-                    </div>
-                  </div>
                   <!-- Card Body -->
                   <div class="card-body">
                     <div id="chart" class="chart"></div>
@@ -566,12 +535,12 @@
                           onclick="openTab(event, 'Profile')"
                           >Profile</a
                         >
-                        <!-- <a
+                        <a
                           href="#"
                           class="tablinks"
                           onclick="openTab(event, 'Analysis')"
                           >Analysis</a
-                        > -->
+                        >
                       </nav>
                     </div>
                     <div id="Summary" class="tabcontent" style="display: block">
@@ -590,9 +559,12 @@
                         ></div>
                       </div>
                     </div>
-
+                    <div id="Profile" class="tabcontent" style="display: None">
+                      <p class="text-justify">{{business_profile}}</p>
+                    </div>
                     <div id="Analysis" class="tabcontent" style="display: None">
-                      <p class="text-justify">Temporary</p>
+                      <div id="cashCorr"></div>
+                      <div id="incomeCorr"></div>
                     </div>
 
                     <div
@@ -620,10 +592,6 @@
                         {{cash_flow|safe}}
                       </table>
                     </div>
-                    <div id="Profile" class="tabcontent" style="display: None">
-                      <p class="text-justify">{{business_profile}}</p>
-                    </div>
-
                     <script>
                       var tabs = $(".sliding-tabs");
                       var selector = $(".sliding-tabs").find("a").length;
@@ -684,19 +652,11 @@
     <!-- End of Page Wrapper -->
 
     <!-- Bootstrap core JavaScript-->
-    <!--    <script src="vendor/jquery/jquery.min.js"></script>-->
     <script src="{{ url_for('static', filename='/vendor/jquery/jquery.min.js') }}"></script>
-
-    <!--    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>-->
     <script src="{{ url_for('static', filename='/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 
     <!-- Core plugin JavaScript-->
-    <!--    <script src="vendor/jquery-easing/jquery.easing.min.js"></script>-->
     <script src="{{ url_for('static', filename='/vendor/jquery-easing/jquery.easing.min.js') }}"></script>
-
-    <!-- Custom scripts for all pages-->
-    <!--    <script src="js/sb-admin-2.min.js"></script>-->
-    <!--    <script src="{{ url_for('static', filename='js/sb-admin-2.min.js') }}"></script>-->
 
     <!-- Page level plugins -->
     <script src="{{ url_for('static', filename='/vendor/chart.js/Chart.min.js') }}"></script>
@@ -800,6 +760,18 @@
         'family' : 'Lexend Deca',
         'color': '#262e4a'
       }
+      });
+    </script>
+    <script>
+      var graphs = {{incomeJSON | safe}};
+      Plotly.newPlot('incomeCorr', graphs, {
+      'title': 'Correlation for Income Statement',
+      });
+    </script>
+   <script>
+      var graphs = {{cashJSON | safe}};
+      Plotly.newPlot('cashCorr', graphs, {
+      'title': 'Correlation for Cash Flow',
       });
     </script>
   </body>
