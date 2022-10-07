@@ -7,9 +7,8 @@ pandas
 quandl
 datetime 
 Flask
-statsmodels
 plotly
 flask_bootstrap
 yfinance
 numerize
-gunicorn
+darts==0.21.0
