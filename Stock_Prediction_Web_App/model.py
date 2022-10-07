@@ -1,6 +1,4 @@
-from pickle import TRUE
 from unicodedata import name
-from black import NewLine
 from matplotlib.pyplot import close
 import numpy as np
 import datetime
@@ -10,10 +8,8 @@ import pandas as pd
 
 import yfinance as yf
 
-from datetime import datetime, timedelta
-from statsmodels.tsa.statespace.sarimax import SARIMAX
+from datetime import datetime
 from datetime import datetime, date
-from pandas.tseries.offsets import DateOffset
 from plotly.graph_objs import Scatter, Bar
 import plotly.express as px
 
@@ -28,13 +24,14 @@ class Model():
     '''
     A model for predicting the stock price
     '''
-    def __init__(self):
+    def __init__(self, stock_symbol, start_date):
         '''
         starting out with our model
         '''
         self.ticket = None
         self.dataset = None
         self.stock_symbol = "AAPL"
+        self.start = start_date
         
     def extract_data(self, start, end):           
         '''
@@ -52,6 +49,11 @@ class Model():
         self.training_set = pd.DataFrame(training_set)
         self.training_set.reset_index(inplace = True)
 
+        self.training_set['Date'] = pd.to_datetime(self.training_set['Date'])
+        mask = self.training_set['Date'] >= datetime.strptime(self.start, '%Y-%m-%d')
+        self.reference_data = self.training_set.loc[mask]
+        self.reference_data['Close'] = self.reference_data['Close'].apply(lambda x: round(x, 2))
+
         return self.training_set
 
     def load_model(self):
@@ -62,9 +64,12 @@ class Model():
             trained_model - model trained with the input date
         '''
         #Load trained model 
-        logs_path = os.path.join(os.getcwd(), "2022-09-16")
-        model_name = "0_NBEATSModel_corr_0.75_icl150_ocl30_gTrue_s30_b1_l4_lw512_bs32_e100_start2019-01-02_end2022-07-01"
-        model = NBEATSModel.load_from_checkpoint(model_name = model_name, work_dir = logs_path, best = False)
+        # logs_path = os.path.join(os.getcwd(), "2022-09-16")
+        # model_name = "0_NBEATSModel_corr_0.75_icl150_ocl30_gTrue_s30_b1_l4_lw512_bs32_e100_start2019-01-02_end2022-07-01"
+        # model = NBEATSModel.load_from_checkpoint(model_name = model_name, work_dir = logs_path, best = False)
+
+        model_path = "2022-09-16/0_NBEATSModel_corr_0.75_icl150_ocl30_gTrue_s30_b1_l4_lw512_bs32_e100_start2019-01-02_end2022-07-01/_model.pth.tar"
+        model = NBEATSModel.load_model(model_path)
 
         return model
 
@@ -95,15 +100,16 @@ class Model():
         predict_data_df.fillna(method = "ffill", inplace = True) # Forward fill missing values
         predict_data_df.fillna(method = "bfill", inplace = True) # Backward fill missing values
         previousdayof_today_closing = predict_data_df['Close'][-1]
+
         
         # Calculate the log return of stock prices
         predict_data_df["Close"] = (np.log(predict_data_df["Close"]) - np.log(predict_data_df["Close"].shift(1)))
         predict_data_df = predict_data_df[1:]    # To remove the first row of NaN value
         predict_data_series = predict_data_df["Close"]
-
         # Convert dataframe to timeseries
         data = TimeSeries.from_series(predict_data_series, freq = 'B')
-        
+        data = data.astype(np.float32)
+
         # Perform prediction
         model = self.load_model()
         trainer = Trainer(accelerator="cpu")
@@ -128,9 +134,11 @@ class Model():
                 break
         
         # prediction result 
-        output = result_df[:validation_index+1]
+        self.pred_res = result_df[:validation_index+1]
+        self.pred_res = self.pred_res.reset_index()
+        self.pred_res['Price'] = self.pred_res['Price'].apply(lambda x:round(x,2))
             
-        return output    
+        return self.pred_res    
         
 
     def plot_data(self):
@@ -142,19 +150,16 @@ class Model():
         OUTPUT
             graph_data - containing data for ploting
         '''
-
-
         graph_data = [
-        
                 Scatter(
-                    x=self.training_set['Date'],
-                    y=self.training_set['Close'],
+                    x=self.reference_data['Date'],
+                    y=self.reference_data['Close'],
                     name='Reference period',
                     marker=dict(color='#5D4E7B')
                 ), 
                 Scatter(
-                     x=self.df['Date'],
-                    y=self.df['Forecast'],
+                     x=self.pred_res['Datetime'],
+                    y=self.pred_res['Price'],
                     name='Forecast period',
                     marker=dict(color ='#FD8A75')
                 )
@@ -255,8 +260,10 @@ class Model():
         return self.ticket.info[obj]
 
 
-prediction_date = "2022-10-20"
-m = Model()
-#m.extract_data(start_date, end_date)
-#m.load_model()
-m.prediction(prediction_date)
+# prediction_date = "2022-10-20"
+# m = Model('AAPL', '2022-09-01')
+# #m.extract_data(start_date, end_date)
+# #m.load_model()
+# pred = m.prediction(prediction_date)
+# # print(pred)
+# print(pred.columns)

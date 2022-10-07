@@ -1,4 +1,5 @@
 import json
+from pyexpat import model
 import plotly
 import pandas as pd
 
@@ -37,7 +38,6 @@ def predict_plot():
     #get the varaible inputs from the user
         companyname = request.form["companyname"]
         ReferenceStartPeriod = request.form["ReferenceStartPeriod"]
-        # ReferenceEndPeriod = request.args.get("ReferenceEndPeriod", "")
         PredictionDate = request.form["PredictionDate"]
         stock_symbol = companyname.upper() #["WIKI/AMZN"]
         start_date = ReferenceStartPeriod #datetime(2017, 1, 1)
@@ -45,54 +45,51 @@ def predict_plot():
         prediction_date = PredictionDate
 
     #build model
-    arima = Model()
-
-    #extract data from api
-    arima.extract_data(stock_symbol, start_date, end_date)
+    model = Model(stock_symbol, start_date)
 
     #train the data 
-    arima.load_model()
+    model.load_model()
 
     #Predict the stock price for a given date
-    stock_predict = round(arima.prediction(prediction_date)[1],2)
+    stock_predict = model.prediction(prediction_date)
 
     #get the prediction graph
-    graph_data = arima.plot_data()
+    graph_data = model.plot_data()
     graphJSON = json.dumps(graph_data, cls = plotly.utils.PlotlyJSONEncoder)
 
     # get the earning graph
-    earning_data = arima.plot_earning()
+    earning_data = model.plot_earning()
     earningGraphJSON = json.dumps(earning_data, cls=plotly.utils.PlotlyJSONEncoder)
 
     # get the revenue graph
-    revenue_data = arima.plot_revenue()
+    revenue_data = model.plot_revenue()
     revenueGraphJSON = json.dumps(revenue_data, cls=plotly.utils.PlotlyJSONEncoder)
 
-    income_statement_graph = arima.plot_income_statement()
+    income_statement_graph = model.plot_income_statement()
     incomeStatementGraphJSON = json.dumps(income_statement_graph,  cls=plotly.utils.PlotlyJSONEncoder)
 
-    balance_sheet_graph = arima.plot_balance_sheet()
+    balance_sheet_graph = model.plot_balance_sheet()
     balanceSheetGraphJSON = json.dumps(balance_sheet_graph, cls = plotly.utils.PlotlyJSONEncoder)
 
 
-    income  = pd.DataFrame(arima.income_statement())
-    history = pd.DataFrame(arima.history())
-    balance = pd.DataFrame(arima.balance_sheet())
-    cash_flow = pd.DataFrame(arima.cash_flow())
+    income  = pd.DataFrame(model.income_statement())
+    history = pd.DataFrame(model.history())
+    balance = pd.DataFrame(model.balance_sheet())
+    cash_flow = pd.DataFrame(model.cash_flow())
 
-    current_close = arima.history_info('Close')
+    current_close = model.history_info('Close')
     previous_close_price = history.iloc[-2, history.columns.get_loc("Close")]
-    # arima.ticker('previousClose')
+    # model.ticker('previousClose')
     percentage_change = ((current_close - previous_close_price)/previous_close_price)*100
 
     # Calculate progress bar for DAY'S RANGE
-    high_price = arima.history_info('High')
-    low_price = arima.history_info('Low')
+    high_price = model.history_info('High')
+    low_price = model.history_info('Low')
     day_bar =((high_price - current_close)/(high_price-low_price))*100
 
     # Calculate progress bar for 52 Week Range
-    fiftyTwo_high = arima.ticker('fiftyTwoWeekHigh')
-    fiftyTwo_low = arima.ticker('fiftyTwoWeekLow')
+    fiftyTwo_high = model.ticker('fiftyTwoWeekHigh')
+    fiftyTwo_low = model.ticker('fiftyTwoWeekLow')
     fiftyTwo_bar = ((fiftyTwo_high - current_close)/(fiftyTwo_high-fiftyTwo_low))*100
 
     return render_template('dashboard.html',
@@ -105,29 +102,29 @@ def predict_plot():
                         balanceSheetJSON = balanceSheetGraphJSON,
                         prediction_date = prediction_date,
                         stock_symbol = stock_symbol,
-                        long_name = arima.ticker('longName'),
-                        open_price = arima.history_info('Open'),
+                        long_name = model.ticker('longName'),
+                        open_price = model.history_info('Open'),
                         high_price = high_price,
                         low_price = low_price,
                         close_price = current_close,
                         summary = history.to_html(),
-                        business_profile = arima.business_info(),
+                        business_profile = model.business_info(),
                         income_statement = income.to_html(),
                         balance_sheet = balance.to_html(),
                         cash_flow =   cash_flow.to_html(),
-                        open_change = arima.history_change('Open'),
-                        high_change=  arima.history_change('High'),
-                        low_change =  arima.history_change('Low'),
-                        close_change= arima.history_change('Close'),
+                        open_change = model.history_change('Open'),
+                        high_change=  model.history_change('High'),
+                        low_change =  model.history_change('Low'),
+                        close_change= model.history_change('Close'),
                         previous_close = numerize.numerize(previous_close_price,2),
-                        volume= numerize.numerize(arima.ticker('volume'),2),
-                        average_vol = numerize.numerize(arima.ticker('averageVolume'),2),
-                        market_cap = numerize.numerize(arima.ticker('marketCap'),2),
-                        dividend_rate= arima.ticker('dividendRate'),
-                        currency = arima.ticker('currency'),
-                        pe =  numerize.numerize(arima.ticker('forwardPE'),2),
-                        eps =  arima.ticker('forwardEps'),
-                        share_float = numerize.numerize(arima.ticker('floatShares'),2),
+                        volume= numerize.numerize(model.ticker('volume'),2),
+                        average_vol = numerize.numerize(model.ticker('averageVolume'),2),
+                        market_cap = numerize.numerize(model.ticker('marketCap'),2),
+                        dividend_rate= model.ticker('dividendRate'),
+                        currency = model.ticker('currency'),
+                        pe =  numerize.numerize(model.ticker('forwardPE'),2),
+                        eps =  model.ticker('forwardEps'),
+                        share_float = numerize.numerize(model.ticker('floatShares'),2),
                         close_percentage_change = numerize.numerize(percentage_change,2),
                         fiftyTwoWeeksHigh = numerize.numerize(fiftyTwo_high,2),
                         fiftyTwoWeeksLow=numerize.numerize(fiftyTwo_low, 2),
