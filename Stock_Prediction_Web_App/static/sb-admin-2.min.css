@@ -2066,6 +2066,10 @@ textarea.form-control.is-valid {
   font-size: 80%;
   color: #e74a3b;
 }
+.invalid-label {
+  font-size: 70%;
+  color: red
+}
 .invalid-tooltip {
   position: absolute;
   top: 100%;
