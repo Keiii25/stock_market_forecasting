@@ -1,4 +1,5 @@
 from unicodedata import name
+from matplotlib.pyplot import close
 import numpy as np
 import datetime
 import numpy as np
@@ -7,7 +8,16 @@ import pandas as pd
 
 import yfinance as yf
 
-from datetime import datetime
+from datetime import datetime, date
+from plotly.graph_objs import Scatter, Bar
+import plotly.express as px
+
+from dateutil.relativedelta import relativedelta
+from darts import TimeSeries
+from darts.models import NBEATSModel
+from pandas.tseries.offsets import BDay
+from pytorch_lightning import Trainer
+import os
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 from datetime import datetime
 from pandas.tseries.offsets import DateOffset
@@ -17,80 +27,121 @@ class Model():
     '''
     A model for predicting the stock price
     '''
-    def __init__(self):
+    def __init__(self, stock_symbol, start_date):
         '''
         starting out with our model
         '''
         self.ticket = None
         self.dataset = None
-
-    def extract_data(self, stock_symbol, start, end):
-
+        self.stock_symbol = "AAPL"
+        self.start = start_date
+        
+    def extract_data(self, start, end):           
         '''
         INPUT:
-            stock_symbol - symbol for company stock
             start - start_date for training period(Reference Period)
             end - end_date for training period(Reference Period)
         OUTPUT:
             training_set - time series dataframe for company stock
         '''
         #get data from quandl finance api
-
-
-        self.ticket = yf.Ticker(stock_symbol)
+        self.ticket = yf.Ticker(self.stock_symbol)
         self.dataset= self.ticket.history(start=start,end=end)
         training_set = self.dataset.iloc[:,3]
         self.training_set = pd.DataFrame(training_set)
         self.training_set.reset_index(inplace = True)
 
+        self.training_set['Date'] = pd.to_datetime(self.training_set['Date'])
+        mask = self.training_set['Date'] >= datetime.strptime(self.start, '%Y-%m-%d')
+        self.reference_data = self.training_set.loc[mask]
+        self.reference_data['Close'] = self.reference_data['Close'].apply(lambda x: round(x, 2))
+
         return self.training_set
 
-    def model_train(self):
+    def load_model(self):
         '''
         INPUT:
 
         OUTPUT:
             trained_model - model trained with the input date
         '''
+        #Load trained model 
+        # logs_path = os.path.join(os.getcwd(), "2022-09-16")
+        # model_name = "0_NBEATSModel_corr_0.75_icl150_ocl30_gTrue_s30_b1_l4_lw512_bs32_e100_start2019-01-02_end2022-07-01"
+        # model = NBEATSModel.load_from_checkpoint(model_name = model_name, work_dir = logs_path, best = False)
 
-        #Prepare the model
+        model_path = "2022-09-16/0_NBEATSModel_corr_0.75_icl150_ocl30_gTrue_s30_b1_l4_lw512_bs32_e100_start2019-01-02_end2022-07-01/_model.pth.tar"
+        model = NBEATSModel.load_model(model_path)
 
+        return model
 
-
-        model = SARIMAX(self.training_set['Close'],order=(0,0,1),
-                        trend='n',
-                        seasonal_order=(1,1,1,12))
-        self.results = model.fit()
-
-        return self.results
-
-    def predict(self, predict_date):
+    def prediction(self, predict_date):
         '''
         INPUT:
             predict_date - date for prediction
         OUTPUT:
-            Prediction - Prediction till date
-        '''
-        # data to be predicted - last date in training set
-        pred_date = datetime.strptime(predict_date, '%Y-%m-%d')
-        diff = pred_date - self.training_set['Date'].iloc[-1]
-        span = diff.days +1
+            Prediction - date and log stock returns of the predicted stock   
+        '''        
+        # Today's Date - YY-mm-dd        
+        today = date.today()
+        one_year_before = today - relativedelta (years= 1)
+                
+        # Number of days to be predicted
+        pred_date = datetime.strptime(predict_date, '%Y-%m-%d').date()
+        n = (pred_date - today).days
+        
+        # Generate a list of business days
+        template = pd.DataFrame(pd.date_range(one_year_before, today, freq=BDay()), columns=['Datetime']).set_index("Datetime")
 
-        #get the dates uptill the predicted date
-        future_date = [self.training_set['Date'].iloc[-1] + DateOffset(days = i) for i in range(0, span)]
+        # Load dataset
+        predict_data_df = self.extract_data(one_year_before, today)
+        predict_data_df = predict_data_df.set_index(pd.to_datetime(predict_data_df['Date']))
+        
+        # Ensure dataframe consists of all business days 
+        predict_data_df = pd.merge(template, predict_data_df, left_index=True, right_index=True, how="left")
+        predict_data_df.fillna(method = "ffill", inplace = True) # Forward fill missing values
+        predict_data_df.fillna(method = "bfill", inplace = True) # Backward fill missing values
+        previousdayof_today_closing = predict_data_df['Close'][-1]
 
-        #convert to dataframe
-        future_date_df1 = pd.DataFrame(future_date, columns = ["Date"])[1:]#.set_index('Date')
+        
+        # Calculate the log return of stock prices
+        predict_data_df["Close"] = (np.log(predict_data_df["Close"]) - np.log(predict_data_df["Close"].shift(1)))
+        predict_data_df = predict_data_df[1:]    # To remove the first row of NaN value
+        predict_data_series = predict_data_df["Close"]
+        # Convert dataframe to timeseries
+        data = TimeSeries.from_series(predict_data_series, freq = 'B')
+        data = data.astype(np.float32)
 
-        #get the prediction for the future dates
-        start_, end_ = len(self.training_set)+1, len(self.training_set)+span
-        future_date_df2 = pd.DataFrame(self.results.predict(start = start_, end = end_, dynamic= True).values)
-
-        future_date_df2.columns = ['Forecast']
-
-        self.df = future_date_df1.join(future_date_df2)
-
-        return self.df.iloc[-1]
+        # Perform prediction
+        model = self.load_model()
+        trainer = Trainer(accelerator="cpu")
+        result = model.predict(n, series=data, trainer = trainer)
+        
+        # Convert timeseries to dataframe        
+        result_df = result.pd_dataframe()
+        result_df = result_df.rename(columns={'Close':'Log_return'})
+        
+        # Convert log return to price
+        result_df["Log_return"] = result_df["Log_return"] + np.log(previousdayof_today_closing) 
+        result_df["Log_return"] = np.exp(result_df["Log_return"])
+        result_df = result_df.rename(columns={'Log_return':'Price'})
+        
+        # validation for prediction beyond the predict date
+        validation_index = 0
+        for i in range(len(result_df.index)):
+            timestamp_date = result_df.index[i]
+            required_date = datetime.strftime(timestamp_date, '%Y-%m-%d') 
+            if required_date == predict_date:
+                validation_index = i
+                break
+        
+        # prediction result 
+        self.pred_res = result_df[:validation_index+1]
+        self.pred_res = self.pred_res.reset_index()
+        self.pred_res['Price'] = self.pred_res['Price'].apply(lambda x:round(x,2))
+            
+        return self.pred_res    
+        
 
     def plot_data(self):
 
@@ -102,14 +153,15 @@ class Model():
             graph_data - containing data for ploting
         '''
         # merge the last row to the forecast dataframe
-        last_row = self.training_set.tail(1)
-        last_row.rename(columns={'Close': 'Forecast'}, inplace=True)
-        df = pd.concat([last_row, self.df])
+
+        last_row = self.reference_data.tail(1)
+        last_row.rename(columns={'Close': 'Price', 'Date': 'Datetime'}, inplace=True)
+        self.pred_res = pd.concat([last_row, self.pred_res])
 
         graph_data = [
                 Scatter(
-                    x=self.training_set['Date'],
-                    y=self.training_set['Close'],
+                    x=self.reference_data['Date'],
+                    y=self.reference_data['Close'],
                     hovertemplate=
                     '<i>Date</i>: <b>%{x}</b>' +
                     '<br>Period: <b>Reference</b> <br>' +
@@ -118,8 +170,8 @@ class Model():
                     marker=dict(color='#5D4E7B')
                 ),
                 Scatter(
-                     x=df['Date'],
-                    y=df['Forecast'],
+                     x=self.pred_res['Datetime'],
+                    y=self.pred_res['Price'],
                     hovertemplate=
                     '<i>Date</i>: <b>%{x}</b>' +
                     '<br>Period: <b>Forecast</b> <br>' +
@@ -199,6 +251,9 @@ class Model():
         ]
         return graph_data
 
+    def history_info(self,info):
+        return round(self.dataset[info].iloc[-1], 2)
+        
     def plot_income_corr(self):
         '''
         INPUT
@@ -311,9 +366,11 @@ class Model():
             return None
 
 
-stock_symbol = "AAPL"
-start_date = "2022-08-01"
-end_date =  "2022-09-03"
-prediction_date = "2022-09-27"
-m = Model()
-m.extract_data(stock_symbol, start_date, end_date)
+
+prediction_date = "2022-10-20"
+m = Model('AAPL', '2022-09-01')
+#m.extract_data(start_date, end_date)
+#m.load_model()
+pred = m.prediction(prediction_date)
+# print(pred)
+print(pred.columns)

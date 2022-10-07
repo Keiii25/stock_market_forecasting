@@ -1,4 +1,5 @@
 import json
+from pyexpat import model
 import plotly
 import pandas as pd
 
@@ -28,7 +29,6 @@ def predict_plot():
     #get the varaible inputs from the user
         companyname = request.form["companyname"]
         ReferenceStartPeriod = request.form["ReferenceStartPeriod"]
-        # ReferenceEndPeriod = request.args.get("ReferenceEndPeriod", "")
         PredictionDate = request.form["PredictionDate"]
         stock_symbol = companyname.upper() #["WIKI/AMZN"]
         start_date = ReferenceStartPeriod #datetime(2017, 1, 1)
@@ -37,24 +37,22 @@ def predict_plot():
 
     error = False
     #build model
-    model = Model()
+    model = Model(stock_symbol, start_date)
+
+    #train the data 
+    model.load_model()
 
     try:
-        model.extract_data(stock_symbol, start_date, end_date)
-        model.model_train()
+        #Predict the stock price for a given date
+        stock_predict = model.prediction(prediction_date)
     except:
         error = True
     #extract data from api
     if error:
         stock_symbol = 'AAPL'
-        model.extract_data(stock_symbol, start_date, end_date)
-        model.model_train()
-
-    #train the data
-    # model.model_train()
-
-    #Predict the stock price for a given date
-    stock_predict = round(model.predict(prediction_date)[1],2)
+        model = Model(stock_symbol, start_date)
+        model.load_model()
+        model.prediction(prediction_date)
 
 
     #get the prediction graph
@@ -69,11 +67,9 @@ def predict_plot():
     revenue_data = model.plot_revenue()
     revenueGraphJSON = json.dumps(revenue_data, cls=plotly.utils.PlotlyJSONEncoder)
 
-    # get the income statement graph
     income_statement_graph = model.plot_income_statement()
     incomeStatementGraphJSON = json.dumps(income_statement_graph,  cls=plotly.utils.PlotlyJSONEncoder)
 
-    # get the balance sheet graph
     balance_sheet_graph = model.plot_balance_sheet()
     balanceSheetGraphJSON = json.dumps(balance_sheet_graph, cls = plotly.utils.PlotlyJSONEncoder)
 
