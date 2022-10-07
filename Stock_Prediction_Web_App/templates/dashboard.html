@@ -80,7 +80,7 @@
                 startDate.getYear() > today.getYear() ||
                 startDate.getMonth() > today.getMonth() ||
                 (startDate.getMonth() == today.getMonth() &&
-                  startDate.getDay() > today.getDay())
+                  startDate.getDate() > today.getDate())
               ) {
                 document.getElementById("ReferenceStartPeriod").innerHTML =
                   "Start date must be in the past";
@@ -92,11 +92,13 @@
                   "Start date must be in the past";
                 document.getElementById("ReferenceStartPeriod").style.display =
                   "none";
+                  document.getElementById("companyname").style.display =
+                  "none";
               }
               if (
                 predictionDate.getYear() < today.getYear() ||
                 predictionDate.getMonth() < today.getMonth() ||
-                predictionDate.getDay() < today.getDay()
+                predictionDate.getDate() < today.getDate()
               ) {
                 document.getElementById("PredictionDate").innerHTML =
                   "Prediction date must be in the future";
@@ -127,7 +129,9 @@
             id="companyname"
             class="invalid-label ml-1"
             style="display: block"
-          >Invalid Stock Name/Abbreviation</div>
+          >
+            Invalid Stock Name/Abbreviation
+          </div>
           {% else %} {% endif %}
           <div class="input-label text-uppercase text-gray-800 pl-2 mt-4">
             Reference Start Date
@@ -170,9 +174,10 @@
       <!-- End of Sidebar -->
 
       <!-- Content Wrapper -->
-      <div id="content-wrapper" class="d-flex flex-column pt-4 bg-content bg-light">
-        {% if predict %}
-
+      <div
+        id="content-wrapper"
+        class="d-flex flex-column pt-4 bg-content bg-light"
+      >
         <!-- Main Content -->
         <div id="content">
           <!-- Begin Page Content -->
@@ -558,9 +563,15 @@
                         <a
                           href="#"
                           class="tablinks"
+                          onclick="openTab(event, 'Profile')"
+                          >Profile</a
+                        >
+                        <!-- <a
+                          href="#"
+                          class="tablinks"
                           onclick="openTab(event, 'Analysis')"
                           >Analysis</a
-                        >
+                        > -->
                       </nav>
                     </div>
                     <div id="Summary" class="tabcontent" style="display: block">
@@ -608,6 +619,9 @@
                       <table>
                         {{cash_flow|safe}}
                       </table>
+                    </div>
+                    <div id="Profile" class="tabcontent" style="display: None">
+                      <p class="text-justify">{{business_profile}}</p>
                     </div>
 
                     <script>
