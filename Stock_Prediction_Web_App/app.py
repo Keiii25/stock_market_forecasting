@@ -18,7 +18,6 @@ Bootstrap(app)
 #this links to the result page of the web app
 @app.route('/', methods=['GET', 'POST'])
 def predict_plot():
-    print(request.form)
     if request.method == 'GET':
         companyname = 'AAPL'
         ReferenceStartPeriod = '2022-09-01'
@@ -63,21 +62,31 @@ def predict_plot():
     revenue_data = arima.plot_revenue()
     revenueGraphJSON = json.dumps(revenue_data, cls=plotly.utils.PlotlyJSONEncoder)
 
+    # get the income statement graph
     income_statement_graph = arima.plot_income_statement()
     incomeStatementGraphJSON = json.dumps(income_statement_graph,  cls=plotly.utils.PlotlyJSONEncoder)
 
+    # get the balance sheet graph
     balance_sheet_graph = arima.plot_balance_sheet()
     balanceSheetGraphJSON = json.dumps(balance_sheet_graph, cls = plotly.utils.PlotlyJSONEncoder)
 
+    #get the income statement correlation graph
+    income_corr_data = arima.plot_income_corr()
+    incomeCorrGraphJSON = json.dumps(income_corr_data, cls = plotly.utils.PlotlyJSONEncoder)
 
+    #get the cash flow correlation graph
+    cash_corr_data = arima.plot_cash_corr()
+    cashCorrGraphJSON = json.dumps(cash_corr_data, cls = plotly.utils.PlotlyJSONEncoder)
+
+    # Make the follow var to dataframe
     income  = pd.DataFrame(arima.income_statement())
     history = pd.DataFrame(arima.history())
     balance = pd.DataFrame(arima.balance_sheet())
     cash_flow = pd.DataFrame(arima.cash_flow())
 
+    # calculate the percentage change for the close price
     current_close = arima.history_info('Close')
     previous_close_price = history.iloc[-2, history.columns.get_loc("Close")]
-    # arima.ticker('previousClose')
     percentage_change = ((current_close - previous_close_price)/previous_close_price)*100
 
     # Calculate progress bar for DAY'S RANGE
@@ -98,6 +107,8 @@ def predict_plot():
                         revenueJSON=revenueGraphJSON,
                         incomeStatementJSON = incomeStatementGraphJSON,
                         balanceSheetJSON = balanceSheetGraphJSON,
+                        incomeJSON =incomeCorrGraphJSON,
+                        cashJSON=cashCorrGraphJSON,
                         prediction_date = prediction_date,
                         stock_symbol = stock_symbol,
                         long_name = arima.ticker('longName'),
@@ -106,6 +117,7 @@ def predict_plot():
                         low_price = low_price,
                         close_price = current_close,
                         summary = history.to_html(),
+                        business_profile=arima.ticker('longBusinessSummary'),
                         income_statement = income.to_html(),
                         balance_sheet = balance.to_html(),
                         cash_flow =   cash_flow.to_html(),
@@ -127,6 +139,7 @@ def predict_plot():
                         fiftyTwoWeeksLow=numerize.numerize(fiftyTwo_low, 2),
                         day_change_progress = day_bar,
                         fiftyTwo_change_progress =  fiftyTwo_bar
+
                         )
 
 

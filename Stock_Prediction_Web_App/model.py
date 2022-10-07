@@ -11,7 +11,7 @@ from datetime import datetime
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 from datetime import datetime
 from pandas.tseries.offsets import DateOffset
-from plotly.graph_objs import Scatter, Bar
+from plotly.graph_objs import Scatter, Bar, Heatmap
 
 class Model():
     '''
@@ -39,15 +39,11 @@ class Model():
 
         self.ticket = yf.Ticker(stock_symbol)
         self.dataset= self.ticket.history(start=start,end=end)
-        df = self.ticket.history(start=start,end=end)
-        training_set = df.iloc[:,3]
+        training_set = self.dataset.iloc[:,3]
         self.training_set = pd.DataFrame(training_set)
         self.training_set.reset_index(inplace = True)
 
         return self.training_set
-
-    
-   
 
     def model_train(self):
         '''
@@ -67,8 +63,6 @@ class Model():
         self.results = model.fit()
 
         return self.results
-
-
 
     def predict(self, predict_date):
         '''
@@ -97,8 +91,6 @@ class Model():
         self.df = future_date_df1.join(future_date_df2)
 
         return self.df.iloc[-1]
-
-
 
     def plot_data(self):
 
@@ -138,8 +130,6 @@ class Model():
             ]
 
         return graph_data
-
-
 
     def plot_earning(self):
         '''
@@ -209,7 +199,100 @@ class Model():
         ]
         return graph_data
 
-        
+    def plot_income_corr(self):
+        '''
+        INPUT
+
+        OUTPUT
+            graph_data - containing data for ploting
+        '''
+        # Extract yearly close price
+        yearly_price = pd.DataFrame(self.ticket.history(period="5y"))
+        yearly_price.reset_index(inplace=True)
+        yearly_price = yearly_price.groupby(yearly_price["Date"].map(lambda x: x.year)).mean()
+        yearly_price.reset_index(inplace=True)
+        yearly_price.rename(columns={'Date': 'Year'}, inplace=True)
+        yearly_price = yearly_price.filter(items=['Year', 'Close'])
+
+        # Extract yearly icnome statement
+        income_statement = pd.DataFrame(self.income_statement())
+        income_statement = income_statement.transpose()
+        income_statement = income_statement.reset_index()
+        income_statement.rename(columns={income_statement.columns[0]: "Year"}, inplace=True)
+        # using dropna() function
+        income_statement.dropna()
+        income_statement = income_statement.filter(items=["Year", "Net Income",
+                                                          "Selling General Administrative",
+                                                          "Gross Profit",
+                                                          "Operating Income",
+                                                          "Total Revenue",
+                                                          "Total Operating Expenses",
+                                                          "Cost of Revenue",
+                                                          "Net Income From Continuing  Ops",
+                                                          "Net Income Applicable To Common Shares"])
+        income_statement["Year"] = income_statement["Year"].map(lambda x: x.year)
+
+        merge_tbl = yearly_price.set_index('Year').join(income_statement.set_index('Year'),how = 'right' ).astype(float)
+        corr_tbl = merge_tbl.corr(method='pearson')
+
+        graph_data = [
+            Heatmap(
+                {'z': corr_tbl.values.tolist(),
+                 'x': corr_tbl.columns.tolist(),
+                 'y': corr_tbl.index.tolist()},
+                colorscale='purples'
+            )
+        ]
+
+        return graph_data
+
+    def plot_cash_corr(self):
+        '''
+        INPUT
+
+        OUTPUT
+            graph_data - containing data for ploting
+        '''
+        # Extract yearly close price
+        yearly_price = pd.DataFrame(self.ticket.history(period="5y"))
+        yearly_price.reset_index(inplace=True)
+        yearly_price = yearly_price.groupby(yearly_price["Date"].map(lambda x: x.year)).mean()
+        yearly_price.reset_index(inplace=True)
+        yearly_price.rename(columns={'Date': 'Year'}, inplace=True)
+        yearly_price = yearly_price.filter(items=['Year', 'Close'])
+
+        # Extract yearly icnome statement
+        cash_flow = pd.DataFrame(self.cash_flow())
+        cash_flow = cash_flow.transpose()
+        cash_flow = cash_flow.reset_index()
+        cash_flow.rename(columns={cash_flow.columns[0]: "Year"}, inplace=True)
+        # using dropna() function
+        cash_flow.dropna()
+        # income_statement = balance_sheet.filter(items=["Year", "Net Income",
+        #                                                   "Selling General Administrative",
+        #                                                   "Gross Profit",
+        #                                                   "Operating Income",
+        #                                                   "Total Revenue",
+        #                                                   "Total Operating Expenses",
+        #                                                   "Cost of Revenue",
+        #                                                   "Total Other Income Expense Net",
+        #                                                   "Net Income From Continuing  Ops",
+        #                                                   "Net Income Applicable To Common Shares"])
+        cash_flow["Year"] = cash_flow["Year"].map(lambda x: x.year)
+        merge_tbl = yearly_price.set_index('Year').join(cash_flow.set_index('Year'),how = 'right' ).astype(float)
+        corr_tbl = merge_tbl.corr(method='pearson')
+
+        graph_data = [
+            Heatmap(
+                {'z': corr_tbl.values.tolist(),
+                 'x': corr_tbl.columns.tolist(),
+                 'y': corr_tbl.index.tolist()},
+                colorscale='purples'
+            )
+        ]
+
+        return graph_data
+
     def history_info(self,info):
         return round(self.dataset[info].iloc[-1], 2)
 
