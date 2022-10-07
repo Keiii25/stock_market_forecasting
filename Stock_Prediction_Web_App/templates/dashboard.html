@@ -60,52 +60,124 @@
         <div class="h6 text-gray-900 mb-4 pl-2">
           Choose a stock and select the date to forecast the stock price.
         </div>
-        <form name = 'form' action="http://127.0.0.1:5000/" method="POST">
+        <form
+          name="input_form"
+          action=""
+          method="POST"
+          onsubmit="return form_validate()"
+        >
+          <script>
+            function form_validate() {
+              var valid = true;
+              today = new Date();
+              startDate = new Date(
+                document.input_form.ReferenceStartPeriod.value
+              );
+              predictionDate = new Date(
+                document.input_form.PredictionDate.value
+              );
+              if (
+                startDate.getYear() > today.getYear() ||
+                startDate.getMonth() > today.getMonth() ||
+                (startDate.getMonth() == today.getMonth() &&
+                  startDate.getDate() > today.getDate())
+              ) {
+                document.getElementById("ReferenceStartPeriod").innerHTML =
+                  "Start date must be in the past";
+                document.getElementById("ReferenceStartPeriod").style.display =
+                  "block";
+                valid = false;
+              } else {
+                document.getElementById("ReferenceStartPeriod").innerHTML =
+                  "Start date must be in the past";
+                document.getElementById("ReferenceStartPeriod").style.display =
+                  "none";
+                  document.getElementById("companyname").style.display =
+                  "none";
+              }
+              if (
+                predictionDate.getYear() < today.getYear() ||
+                predictionDate.getMonth() < today.getMonth() ||
+                predictionDate.getDate() < today.getDate()
+              ) {
+                document.getElementById("PredictionDate").innerHTML =
+                  "Prediction date must be in the future";
+                document.getElementById("PredictionDate").style.display =
+                  "block";
+                valid = false;
+              } else {
+                document.getElementById("PredictionDate").innerHTML =
+                  "Prediction date must be in the future";
+                document.getElementById("PredictionDate").style.display =
+                  "none";
+              }
+              return valid;
+            }
+          </script>
           <div class="input-label text-uppercase text-gray-800 pl-2">
-            Stock Name/ 
-            Abbreviation
+            Stock Name/ Abbreviation
           </div>
           <input
             type="text"
             name="companyname"
-            class="form-control rounded-input input-font mb-4"
+            class="form-control rounded-input input-font"
             placeholder="Search for stock"
             required
           />
-          <div class="input-label text-uppercase text-gray-800 pl-2">
-            Start Date
+          {% if error %}
+          <div
+            id="companyname"
+            class="invalid-label ml-1"
+            style="display: block"
+          >
+            Invalid Stock Name/Abbreviation
+          </div>
+          {% else %} {% endif %}
+          <div class="input-label text-uppercase text-gray-800 pl-2 mt-4">
+            Reference Start Date
           </div>
           <input
             type="date"
             name="ReferenceStartPeriod"
-            class="form-control rounded-input input-font mb-4"
-            placeholder="Start Date"
+            class="form-control rounded-input input-font"
             required
           />
-          <div class="input-label text-uppercase text-gray-800 pl-2">
+          <div
+            id="ReferenceStartPeriod"
+            class="invalid-label ml-1"
+            style="display: None"
+          ></div>
+          <div class="input-label text-uppercase text-gray-800 pl-2 mt-4">
             Forecast Date
           </div>
           <input
             type="date"
             name="PredictionDate"
-            class="form-control rounded-input input-font mb-4"
-            placeholder="Forecast Date"
+            class="form-control rounded-input input-font"
             required
           />
+          <div
+            id="PredictionDate"
+            class="invalid-label ml-1"
+            style="display: None"
+            required
+          ></div>
           <button
             type="submit"
-            class="btn btn-lg btn-success text-uppercase"
-            value="Submit"
+            class="btn btn-lg btn-success text-uppercase mt-4"
           >
-            Build Model
+            Submit
           </button>
         </form>
       </div>
+
       <!-- End of Sidebar -->
 
       <!-- Content Wrapper -->
-      <div id="content-wrapper" class="d-flex flex-column pt-4 bg-content">
-        {% if predict %}
+      <div
+        id="content-wrapper"
+        class="d-flex flex-column pt-4 bg-content bg-light"
+      >
         <!-- Main Content -->
         <div id="content">
           <!-- Begin Page Content -->
@@ -280,37 +352,6 @@
                   Prediction Graph
                 </h5>
                 <div class="card shadow mb-4">
-                  <div
-                    class="d-flex flex-row align-items-center justify-content-between"
-                  >
-                    <div class="dropdown no-arrow">
-                      <a
-                        class="dropdown-toggle"
-                        href="#"
-                        role="button"
-                        id="dropdownMenuLink"
-                        data-toggle="dropdown"
-                        aria-haspopup="true"
-                        aria-expanded="false"
-                      >
-                        <i
-                          class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"
-                        ></i>
-                      </a>
-                      <div
-                        class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
-                        aria-labelledby="dropdownMenuLink"
-                      >
-                        <div class="dropdown-header">Dropdown Header:</div>
-                        <a class="dropdown-item" href="#">Action</a>
-                        <a class="dropdown-item" href="#">Another action</a>
-                        <div class="dropdown-divider"></div>
-                        <a class="dropdown-item" href="#"
-                          >Something else here</a
-                        >
-                      </div>
-                    </div>
-                  </div>
                   <!-- Card Body -->
                   <div class="card-body">
                     <div id="chart" class="chart"></div>
@@ -494,6 +535,12 @@
                           onclick="openTab(event, 'Profile')"
                           >Profile</a
                         >
+                        <a
+                          href="#"
+                          class="tablinks"
+                          onclick="openTab(event, 'Analysis')"
+                          >Analysis</a
+                        >
                       </nav>
                     </div>
                     <div id="Summary" class="tabcontent" style="display: block">
@@ -512,9 +559,12 @@
                         ></div>
                       </div>
                     </div>
-
                     <div id="Profile" class="tabcontent" style="display: None">
                       <p class="text-justify">{{business_profile}}</p>
+                    </div>
+                    <div id="Analysis" class="tabcontent" style="display: None">
+                      <div id="cashCorr"></div>
+                      <div id="incomeCorr"></div>
                     </div>
 
                     <div
@@ -542,7 +592,6 @@
                         {{cash_flow|safe}}
                       </table>
                     </div>
-
                     <script>
                       var tabs = $(".sliding-tabs");
                       var selector = $(".sliding-tabs").find("a").length;
@@ -596,9 +645,6 @@
           </footer>
           <!-- End of Footer -->
         </div>
-        {% else %}
-        
-        {% endif %}
       </div>
       <!-- End of Content Wrapper -->
     </div>
@@ -606,19 +652,11 @@
     <!-- End of Page Wrapper -->
 
     <!-- Bootstrap core JavaScript-->
-    <!--    <script src="vendor/jquery/jquery.min.js"></script>-->
     <script src="{{ url_for('static', filename='/vendor/jquery/jquery.min.js') }}"></script>
-
-    <!--    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>-->
     <script src="{{ url_for('static', filename='/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 
     <!-- Core plugin JavaScript-->
-    <!--    <script src="vendor/jquery-easing/jquery.easing.min.js"></script>-->
     <script src="{{ url_for('static', filename='/vendor/jquery-easing/jquery.easing.min.js') }}"></script>
-
-    <!-- Custom scripts for all pages-->
-    <!--    <script src="js/sb-admin-2.min.js"></script>-->
-    <!--    <script src="{{ url_for('static', filename='js/sb-admin-2.min.js') }}"></script>-->
 
     <!-- Page level plugins -->
     <script src="{{ url_for('static', filename='/vendor/chart.js/Chart.min.js') }}"></script>
@@ -628,16 +666,16 @@
         var valid = true;
         let form = document.forms["form"];
         if (form.companyname == "") {
-            alert("Please enter a stock name/abbr.");
+          alert("Please enter a stock name/abbr.");
+          valid = false;
+          if (form.ReferenceStartPeriod) {
+            alert("Please choose a reference start date.");
             valid = false;
-        if (form.ReferenceStartPeriod) {
-          alert("Please choose a reference start date.");
-          valid = false;
-        }
-        if (form.PredictionDate) {
-          alert("Please choose a prediction date.");
-          valid = false;
-        }
+          }
+          if (form.PredictionDate) {
+            alert("Please choose a prediction date.");
+            valid = false;
+          }
           return valid;
         }
       }
@@ -652,6 +690,10 @@
       },
       'yaxis': {
       'title': "Price"
+      },
+      'font' : {
+        'family' : 'Lexend Deca',
+        'color': '#262e4a'
       }
       });
     </script>
@@ -665,6 +707,10 @@
       },
       'yaxis': {
       'title': "Price"
+      },
+      'font' : {
+        'family' : 'Lexend Deca',
+        'color': '#262e4a'
       }
       });
     </script>
@@ -677,6 +723,10 @@
       },
       'yaxis': {
       'title': "Price"
+      },
+      'font' : {
+        'family' : 'Lexend Deca',
+        'color': '#262e4a'
       }
       });
     </script>
@@ -689,6 +739,10 @@
       },
       'yaxis': {
       'title': "Price"
+      },
+      'font' : {
+        'family' : 'Lexend Deca',
+        'color': '#262e4a'
       }
       });
     </script>
@@ -701,7 +755,23 @@
       },
       'yaxis': {
       'title': "Price"
+      },
+      'font' : {
+        'family' : 'Lexend Deca',
+        'color': '#262e4a'
       }
+      });
+    </script>
+    <script>
+      var graphs = {{incomeJSON | safe}};
+      Plotly.newPlot('incomeCorr', graphs, {
+      'title': 'Correlation for Income Statement',
+      });
+    </script>
+   <script>
+      var graphs = {{cashJSON | safe}};
+      Plotly.newPlot('cashCorr', graphs, {
+      'title': 'Correlation for Cash Flow',
       });
     </script>
   </body>
