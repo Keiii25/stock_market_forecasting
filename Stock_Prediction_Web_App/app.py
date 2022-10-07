@@ -7,13 +7,11 @@ from flask_bootstrap import Bootstrap
 from model import Model
 
 from datetime import datetime
-from plotly.graph_objs import Scatter
 from numerize import numerize
 from datetime import timedelta
 
 app = Flask(__name__, static_url_path='/static')
 Bootstrap(app)
-
 
 #this links to the result page of the web app
 @app.route('/', methods=['GET', 'POST'])
@@ -37,70 +35,79 @@ def predict_plot():
         end_date = datetime.strftime(datetime.strptime(PredictionDate, '%Y-%m-%d')-timedelta(days=1), '%Y-%m-%d')
         prediction_date = PredictionDate
 
+    error = False
     #build model
-    arima = Model()
+    model = Model()
 
+    try:
+        model.extract_data(stock_symbol, start_date, end_date)
+        model.model_train()
+    except:
+        error = True
     #extract data from api
-    arima.extract_data(stock_symbol, start_date, end_date)
+    if error:
+        stock_symbol = 'AAPL'
+        model.extract_data(stock_symbol, start_date, end_date)
+        model.model_train()
 
-    #train the data 
-    arima.model_train()
+    #train the data
+    # model.model_train()
 
     #Predict the stock price for a given date
-    stock_predict = round(arima.predict(prediction_date)[1],2)
+    stock_predict = round(model.predict(prediction_date)[1],2)
 
 
     #get the prediction graph
-    graph_data = arima.plot_data()
+    graph_data = model.plot_data()
     graphJSON = json.dumps(graph_data, cls = plotly.utils.PlotlyJSONEncoder)
 
     # get the earning graph
-    earning_data = arima.plot_earning()
+    earning_data = model.plot_earning()
     earningGraphJSON = json.dumps(earning_data, cls=plotly.utils.PlotlyJSONEncoder)
 
     # get the revenue graph
-    revenue_data = arima.plot_revenue()
+    revenue_data = model.plot_revenue()
     revenueGraphJSON = json.dumps(revenue_data, cls=plotly.utils.PlotlyJSONEncoder)
 
     # get the income statement graph
-    income_statement_graph = arima.plot_income_statement()
+    income_statement_graph = model.plot_income_statement()
     incomeStatementGraphJSON = json.dumps(income_statement_graph,  cls=plotly.utils.PlotlyJSONEncoder)
 
     # get the balance sheet graph
-    balance_sheet_graph = arima.plot_balance_sheet()
+    balance_sheet_graph = model.plot_balance_sheet()
     balanceSheetGraphJSON = json.dumps(balance_sheet_graph, cls = plotly.utils.PlotlyJSONEncoder)
 
     #get the income statement correlation graph
-    income_corr_data = arima.plot_income_corr()
+    income_corr_data = model.plot_income_corr()
     incomeCorrGraphJSON = json.dumps(income_corr_data, cls = plotly.utils.PlotlyJSONEncoder)
 
     #get the cash flow correlation graph
-    cash_corr_data = arima.plot_cash_corr()
+    cash_corr_data = model.plot_cash_corr()
     cashCorrGraphJSON = json.dumps(cash_corr_data, cls = plotly.utils.PlotlyJSONEncoder)
 
     # Make the follow var to dataframe
-    income  = pd.DataFrame(arima.income_statement())
-    history = pd.DataFrame(arima.history())
-    balance = pd.DataFrame(arima.balance_sheet())
-    cash_flow = pd.DataFrame(arima.cash_flow())
+    income  = pd.DataFrame(model.income_statement())
+    history = pd.DataFrame(model.history())
+    balance = pd.DataFrame(model.balance_sheet())
+    cash_flow = pd.DataFrame(model.cash_flow())
 
     # calculate the percentage change for the close price
-    current_close = arima.history_info('Close')
+    current_close = model.history_info('Close')
     previous_close_price = history.iloc[-2, history.columns.get_loc("Close")]
     percentage_change = ((current_close - previous_close_price)/previous_close_price)*100
 
     # Calculate progress bar for DAY'S RANGE
-    high_price = arima.history_info('High')
-    low_price = arima.history_info('Low')
+    high_price = model.history_info('High')
+    low_price = model.history_info('Low')
     day_bar =((high_price - current_close)/(high_price-low_price))*100
 
     # Calculate progress bar for 52 Week Range
-    fiftyTwo_high = arima.ticker('fiftyTwoWeekHigh')
-    fiftyTwo_low = arima.ticker('fiftyTwoWeekLow')
+    fiftyTwo_high = model.ticker('fiftyTwoWeekHigh')
+    fiftyTwo_low = model.ticker('fiftyTwoWeekLow')
     fiftyTwo_bar = ((fiftyTwo_high - current_close)/(fiftyTwo_high-fiftyTwo_low))*100
 
     return render_template('dashboard.html',
-                            predict = True, 
+                            error = error,
                         stock_predict = stock_predict,
                         graphJSON = graphJSON,
                         earningJSON= earningGraphJSON,
@@ -111,35 +118,34 @@ def predict_plot():
                         cashJSON=cashCorrGraphJSON,
                         prediction_date = prediction_date,
                         stock_symbol = stock_symbol,
-                        long_name = arima.ticker('longName'),
-                        open_price = arima.history_info('Open'),
+                        long_name = model.ticker('longName'),
+                        open_price = model.history_info('Open'),
                         high_price = high_price,
                         low_price = low_price,
                         close_price = current_close,
                         summary = history.to_html(),
-                        business_profile=arima.ticker('longBusinessSummary'),
                         income_statement = income.to_html(),
                         balance_sheet = balance.to_html(),
                         cash_flow =   cash_flow.to_html(),
-                        open_change = arima.history_change('Open'),
-                        high_change=  arima.history_change('High'),
-                        low_change =  arima.history_change('Low'),
-                        close_change= arima.history_change('Close'),
+                        open_change = model.history_change('Open'),
+                        high_change=  model.history_change('High'),
+                        low_change =  model.history_change('Low'),
+                        close_change= model.history_change('Close'),
+                        business_profile = model.business_info(),
                         previous_close = numerize.numerize(previous_close_price,2),
-                        volume= numerize.numerize(arima.ticker('volume'),2),
-                        average_vol = numerize.numerize(arima.ticker('averageVolume'),2),
-                        market_cap = numerize.numerize(arima.ticker('marketCap'),2),
-                        dividend_rate= arima.ticker('dividendRate'),
-                        currency = arima.ticker('currency'),
-                        pe =  None if arima.ticker('forwardPE') is None else numerize.numerize(arima.ticker('forwardPE'),2),
-                        eps =  None if arima.ticker('forwardEps') is None else arima.ticker('forwardEps'),
-                        share_float = None if arima.ticker('floatShares') is None else numerize.numerize(arima.ticker('floatShares'),2),
+                        volume= numerize.numerize(model.ticker('volume'),2),
+                        average_vol = numerize.numerize(model.ticker('averageVolume'),2),
+                        market_cap = numerize.numerize(model.ticker('marketCap'),2),
+                        dividend_rate= model.ticker('dividendRate'),
+                        currency = model.ticker('currency'),
+                        pe =  None if model.ticker('forwardPE') is None else numerize.numerize(model.ticker('forwardPE'),2),
+                        eps =  None if model.ticker('forwardEps') is None else model.ticker('forwardEps'),
+                        share_float = None if model.ticker('floatShares') is None else numerize.numerize(model.ticker('floatShares'),2),
                         close_percentage_change = numerize.numerize(percentage_change,2),
                         fiftyTwoWeeksHigh = numerize.numerize(fiftyTwo_high,2),
                         fiftyTwoWeeksLow=numerize.numerize(fiftyTwo_low, 2),
                         day_change_progress = day_bar,
                         fiftyTwo_change_progress =  fiftyTwo_bar
-
                         )
 
 
@@ -149,5 +155,4 @@ def main():
 
 if __name__ == '__main__':
     main()
-    
-    
+

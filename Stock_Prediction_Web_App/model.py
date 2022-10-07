@@ -23,9 +23,9 @@ class Model():
         '''
         self.ticket = None
         self.dataset = None
-        
+
     def extract_data(self, stock_symbol, start, end):
-                
+
         '''
         INPUT:
             stock_symbol - symbol for company stock
@@ -33,7 +33,7 @@ class Model():
             end - end_date for training period(Reference Period)
         OUTPUT:
             training_set - time series dataframe for company stock
-        '''    
+        '''
         #get data from quandl finance api
 
 
@@ -47,15 +47,15 @@ class Model():
 
     def model_train(self):
         '''
-        INPUT: 
-               
+        INPUT:
+
         OUTPUT:
             trained_model - model trained with the input date
         '''
 
         #Prepare the model
 
-       
+
 
         model = SARIMAX(self.training_set['Close'],order=(0,0,1),
                         trend='n',
@@ -69,13 +69,13 @@ class Model():
         INPUT:
             predict_date - date for prediction
         OUTPUT:
-            Prediction - Prediction till date  
+            Prediction - Prediction till date
         '''
         # data to be predicted - last date in training set
         pred_date = datetime.strptime(predict_date, '%Y-%m-%d')
         diff = pred_date - self.training_set['Date'].iloc[-1]
         span = diff.days +1
-        
+
         #get the dates uptill the predicted date
         future_date = [self.training_set['Date'].iloc[-1] + DateOffset(days = i) for i in range(0, span)]
 
@@ -96,8 +96,8 @@ class Model():
 
 
         '''
-        INPUT 
-            
+        INPUT
+
         OUTPUT
             graph_data - containing data for ploting
         '''
@@ -111,9 +111,9 @@ class Model():
                     x=self.training_set['Date'],
                     y=self.training_set['Close'],
                     hovertemplate=
-                    '<i>Date</i>: %{x}' +
-                    '<br><b>Period</b>: Reference <br>' +
-                    '<i>Price</i>: %{y:.2f}',
+                    '<i>Date</i>: <b>%{x}</b>' +
+                    '<br>Period: <b>Reference</b> <br>' +
+                    '<i>Price</i>: <b>%{y:.2f}</b>',
                     name='Reference period',
                     marker=dict(color='#5D4E7B')
                 ),
@@ -121,9 +121,9 @@ class Model():
                      x=df['Date'],
                     y=df['Forecast'],
                     hovertemplate=
-                    '<i>Date</i>: %{x}' +
-                    '<br>Period: Forecast <br>' +
-                    '<i>Price</i>: %{y:.2f}',
+                    '<i>Date</i>: <b>%{x}</b>' +
+                    '<br>Period: <b>Forecast</b> <br>' +
+                    '<i>Price</i>: <b>%{y:.2f}</b>',
                     name='Forecast period',
                     marker=dict(color ='#FD8A75')
                 )
@@ -268,16 +268,6 @@ class Model():
         cash_flow.rename(columns={cash_flow.columns[0]: "Year"}, inplace=True)
         # using dropna() function
         cash_flow.dropna()
-        # income_statement = balance_sheet.filter(items=["Year", "Net Income",
-        #                                                   "Selling General Administrative",
-        #                                                   "Gross Profit",
-        #                                                   "Operating Income",
-        #                                                   "Total Revenue",
-        #                                                   "Total Operating Expenses",
-        #                                                   "Cost of Revenue",
-        #                                                   "Total Other Income Expense Net",
-        #                                                   "Net Income From Continuing  Ops",
-        #                                                   "Net Income Applicable To Common Shares"])
         cash_flow["Year"] = cash_flow["Year"].map(lambda x: x.year)
         merge_tbl = yearly_price.set_index('Year').join(cash_flow.set_index('Year'),how = 'right' ).astype(float)
         corr_tbl = merge_tbl.corr(method='pearson')
@@ -292,6 +282,9 @@ class Model():
         ]
 
         return graph_data
+
+    def business_info(self):
+        return self.ticket.info['longBusinessSummary']
 
     def history_info(self,info):
         return round(self.dataset[info].iloc[-1], 2)
