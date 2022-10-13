@@ -12,6 +12,8 @@ from darts.models import NBEATSModel
 from pandas.tseries.offsets import BDay
 from pytorch_lightning import Trainer
 from plotly.graph_objs import Scatter, Bar, Heatmap
+import warnings
+warnings.filterwarnings("ignore")
 
 class Model():
     '''
@@ -46,6 +48,8 @@ class Model():
         self.reference_data = self.training_set.loc[mask]
         self.reference_data['Close'] = self.reference_data['Close'].apply(lambda x: round(x, 2))
 
+        if len(self.training_set) == 0:
+            raise Exception
         return self.training_set
 
     def load_model(self):
@@ -112,9 +116,10 @@ class Model():
         result_df = result_df.rename(columns={'Close':'Log_return'})
         
         # Convert log return to price
-        result_df["Log_return"] = result_df["Log_return"] + np.log(previousdayof_today_closing) 
-        result_df["Log_return"] = np.exp(result_df["Log_return"])
-        result_df = result_df.rename(columns={'Log_return':'Price'})
+        # result_df["Log_return"] = result_df["Log_return"] + np.log(previousdayof_today_closing) 
+        # result_df["Log_return"] = np.exp(result_df["Log_return"])
+        # result_df = result_df.rename(columns={'Log_return':'Price'})
+        result_df = self.conversion(result_df, previousdayof_today_closing)
         
         # validation for prediction beyond the predict date
         validation_index = 0
@@ -131,6 +136,12 @@ class Model():
         self.pred_res['Price'] = self.pred_res['Price'].apply(lambda x:round(x,2))
             
         return self.pred_res    
+    
+    def conversion(self, result, previousdayof_today_closing):
+        result["Log_return"] = result["Log_return"] + np.log(previousdayof_today_closing) 
+        result["Log_return"] = np.exp(result["Log_return"])
+        result = result.rename(columns={'Log_return':'Price'})
+        return result
         
 
     def plot_data(self):
@@ -355,9 +366,11 @@ class Model():
 
 
 # prediction_date = "2022-10-20"
-# m = Model('AAPL', '2022-09-01')
-#m.extract_data(start_date, end_date)
-#m.load_model()
+# m = Model('00000', '2022-09-01')
+# s = m.extract_data("2022-09-01", "2022-09-20")
+# print(s)
+# print(len(s))
+# m.load_model()
 # pred = m.prediction(prediction_date)
 # print(pred)
-# print(pred.columns)
+# print(len(pred))

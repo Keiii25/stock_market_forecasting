@@ -10,6 +10,10 @@ from model import Model
 from datetime import datetime
 from numerize import numerize
 from datetime import timedelta
+import sys
+import warnings
+warnings.filterwarnings("ignore")
+
 
 app = Flask(__name__, static_url_path='/static')
 Bootstrap(app)
@@ -24,7 +28,6 @@ def predict_plot():
         PredictionDate = datetime.strftime(datetime.today() + timedelta(days=1), '%Y-%m-%d')
         stock_symbol = companyname.upper() #["WIKI/AMZN"]
         start_date = ReferenceStartPeriod #datetime(2017, 1, 1)
-        end_date = datetime.strftime(datetime.strptime(PredictionDate, '%Y-%m-%d')-timedelta(days=1), '%Y-%m-%d')
         prediction_date = PredictionDate
     else:
     #get the varaible inputs from the user
@@ -33,7 +36,6 @@ def predict_plot():
         PredictionDate = request.form["PredictionDate"]
         stock_symbol = companyname.upper() #["WIKI/AMZN"]
         start_date = ReferenceStartPeriod #datetime(2017, 1, 1)
-        end_date = datetime.strftime(datetime.strptime(PredictionDate, '%Y-%m-%d')-timedelta(days=1), '%Y-%m-%d')
         prediction_date = PredictionDate
 
     error = False
@@ -45,7 +47,8 @@ def predict_plot():
 
     try:
         #Predict the stock price for a given date
-        stock_predict = model.prediction(prediction_date)
+        print('Predicting stock ' + stock_symbol + ' on ' + str(prediction_date), file=sys.stderr)
+        stock_predict = model.prediction(prediction_date)    
     except:
         error = True
 
@@ -54,7 +57,8 @@ def predict_plot():
         stock_symbol = 'AAPL'
         model = Model(stock_symbol, start_date)
         model.load_model()
-        model.prediction(prediction_date)
+        print('Predicting stock ' + stock_symbol + ' on ' + str(prediction_date), file=sys.stderr)
+        stock_predict = model.prediction(prediction_date)
 
 
     #get the prediction graph
