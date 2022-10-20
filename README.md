@@ -36,8 +36,8 @@ SARIMA (Seasonal Autoregressive Integrated Moving Average)
 * plotly.graph_objs.Scatter
 
 ### Summary of Output
-![index img](/static/Screenshot(155).png)
-![results img](/static/Screenshot(154).png)
+![web_app img](Stock_Prediction_Web_App/static/image/web_app.png)
+
 
 ## Steps to run the code
 * Clone the github and goto folder
