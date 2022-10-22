@@ -1,16 +1,12 @@
 ﻿# Stock Price Prediction App
- 
-### [link to app](http://stockpredapp.herokuapp.com/)
 
-A simple web based product using machine learning to predict the future stock values based on historical values 
 
 ## Motivation
 This project is centerd on providing a tool that can be used to forecast accurately, professional or personal use, the future stock price of companies, this helps to improve accuracy of financial analysis and also gain value on investment.
 
 
 ## Machine Learning model used:
-SARIMA (Seasonal Autoregressive Integrated Moving Average)
-
+N-BEATS Model
 
 ## Technologies & Libraries used:
 
