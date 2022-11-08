@@ -4,6 +4,8 @@
 ## Motivation
 This project is centerd on providing a tool that can be used to forecast accurately, professional or personal use, the future stock price of companies, this helps to improve accuracy of financial analysis and also gain value on investment.
 
+A meta learning model is used to help reduce the need for large datasets on training the model for computational effiency.
+
 
 ## Machine Learning model used:
 N-BEATS Model
@@ -36,10 +38,11 @@ N-BEATS Model
 
 
 ## Steps to run the code
-* Clone the github and goto folder
-* install the required dependencies
-* Run Stock Market Prediction/app.py - this starts the http server using python flask
-* Open the port on the browser and use the site
+* Clone the github repository or download the zip file
+* Navigate to the folder `Stock Market Prediction App` by running `cd Stock Market Prediction App` on the terminal
+* Run `pip install -r requirements.txt`
+* Run `flask run` - this starts the http server using python flask
+* Open the port `http://127.0.0.1:5000/` on the browser
 
 
 
